@@ -159,8 +159,23 @@ function ReadinessCompact({ score }: { score: number }) {
           style={{ width: `${score}%` }}
         />
       </div>
-      <span className="text-xs font-medium text-muted-foreground tabular-nums">{score}%</span>
-      <span className="text-[10px] text-muted-foreground/60">{getStateLabel(score)}</span>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex items-center gap-1 cursor-help">
+              <span className="text-xs font-medium text-muted-foreground tabular-nums">{score}%</span>
+              <span className="text-[10px] text-muted-foreground/60">{getStateLabel(score)}</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[260px] space-y-1 text-left">
+            <p className="text-xs font-semibold">Account intelligence: {score}% complete</p>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              This is a high-level indicator based on how much relevant context we currently have (signals, initiatives, trends, and your evidence).
+            </p>
+            <p className="text-[11px] font-medium text-primary">To improve recommendations: add evidence.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

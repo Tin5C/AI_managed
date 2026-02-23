@@ -788,6 +788,61 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                 </div>
               </CollapsibleSection>
 
+              {/* Talk Tracks */}
+              <CollapsibleSection title="Talk Tracks" subtitle="Customer outcome narrative" defaultOpen={false}>
+                {(() => {
+                  // Source talk tracks from active business package if available
+                  const activePlay = selectedAccount ? getActivePlay(selectedAccount) : null;
+                  const lookupParams = {
+                    focusId: selectedAccount ?? '',
+                    playId: activePlay?.playId ?? '',
+                    type: engagementType ?? '',
+                    motion: motion ?? '',
+                  };
+                  const variants = getAvailableVariants(lookupParams);
+                  const effectiveVariant = variants.includes(businessVariant)
+                    ? businessVariant
+                    : variants[0] ?? null;
+                  const pkg = effectiveVariant
+                    ? getBusinessPlayPackage({ ...lookupParams, variant: effectiveVariant })
+                    : null;
+                  const talkTracks = pkg?.business.positioning.talk_tracks;
+
+                  if (talkTracks && talkTracks.length > 0) {
+                    return (
+                      <ul className="space-y-2">
+                        {talkTracks.map((tt, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                            <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-semibold text-foreground">{tt.persona}:</span>{' '}
+                              {tt.message}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
+
+                  // Deterministic fallback bullets
+                  return (
+                    <ul className="space-y-2">
+                      {[
+                        'Reduce operational risk by consolidating AI workloads on a compliant, sovereign-ready platform.',
+                        'Accelerate time-to-value with pre-validated architecture patterns and field-tested pilot frameworks.',
+                        'Improve decision quality by embedding AI-driven insights into frontline operational workflows.',
+                        'De-risk the transformation journey with phased delivery milestones and measurable ROI checkpoints.',
+                      ].map((bullet, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                          {bullet}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
+              </CollapsibleSection>
+
               {/* Plan Inbox */}
               {planInbox}
 

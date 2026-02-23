@@ -10,7 +10,9 @@ export interface DealPlanTriggerContext {
   /** Account ID for signal-first entry */
   focusId?: string;
   /** Entry source */
-  entry?: 'quickbrief' | 'inbox' | 'story' | 'ai_trend';
+  entry?: 'quickbrief' | 'inbox' | 'story' | 'ai_trend' | 'add_account_intelligence';
+  /** Open evidence drawer on arrival */
+  openEvidence?: boolean;
   /** Authority trend focus (ai_trend entry) */
   trendId?: string;
   trendTitle?: string;

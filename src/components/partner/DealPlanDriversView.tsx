@@ -325,12 +325,21 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   // Authority Trend focus mode state
   const [focusTrend, setFocusTrend] = useState<{ id: string; title: string } | null>(null);
 
+  // Evidence drawer auto-open intent from Account Intelligence
+  const [initialOpenEvidence, setInitialOpenEvidence] = useState(false);
+
   // Consume deal-plan trigger on mount (signal-first or trend-first entry)
   useEffect(() => {
     const ctx = consumeDealPlanTrigger();
     if (!ctx) return;
 
-    if (ctx.entry === 'quickbrief' && ctx.signalId && ctx.focusId) {
+    if (ctx.entry === 'add_account_intelligence' && ctx.focusId) {
+      setSelectedAccount(ctx.focusId);
+      setPlanGenerated(true);
+      if (ctx.openEvidence) {
+        setInitialOpenEvidence(true);
+      }
+    } else if (ctx.entry === 'quickbrief' && ctx.signalId && ctx.focusId) {
       setSelectedAccount(ctx.focusId);
       const pool = buildSignalPool(ctx.focusId, WEEK_OF);
       const found = pool.find((p) => p.id === ctx.signalId);
@@ -683,6 +692,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             onClearFocus={() => setFocusSignal(null)}
             focusTrend={focusTrend}
             onClearTrendFocus={() => setFocusTrend(null)}
+            initialOpenEvidence={initialOpenEvidence}
+            onEvidenceDrawerOpened={() => setInitialOpenEvidence(false)}
             pickerNode={
               showPicker ? (
                 <SignalPickerPanel

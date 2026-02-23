@@ -109,7 +109,7 @@ const ACCOUNTS = [
   { id: 'ubs', label: 'UBS' },
 ];
 
-type ViewTab = 'sales' | 'business' | 'technical';
+type ViewTab = 'business' | 'technical';
 
 interface DealPlanDriversViewProps {
   onGoToQuickBrief: () => void;
@@ -366,7 +366,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const drivers = plan?.promotedSignals ?? [];
 
   const [showPicker, setShowPicker] = useState(false);
-  const [viewTab, setViewTab] = useState<ViewTab>('sales');
+  const [viewTab, setViewTab] = useState<ViewTab>('business');
 
   const [engagementType, setEngagementType] = useState<EngagementType | null>(null);
   const [motion, setMotion] = useState<Motion | null>(null);
@@ -625,8 +625,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   ) : null;
 
   // ============= TAB DEFINITIONS =============
+  // Sales tab removed — UI simplification v2
   const TABS: { key: ViewTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'sales', label: 'Sales', icon: <Target className="w-3 h-3" /> },
     { key: 'business', label: 'Business', icon: <Briefcase className="w-3 h-3" /> },
     { key: 'technical', label: 'Technical', icon: <Wrench className="w-3 h-3" /> },
   ];
@@ -735,84 +735,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
               ))}
             </div>
           </div>
-
-          {/* ===== SALES TAB ===== */}
-          {viewTab === 'sales' && (
-            <div className="space-y-3">
-              {/* (Next action strip removed — single entry via Edit input sources) */}
-
-              {/* Stakeholders & Process */}
-              <CollapsibleSection title="Stakeholders & Process" subtitle="Political map and procurement pathway" defaultOpen={true}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <StakeholderRow role="Sponsor" icon={<Crown className="w-3 h-3" />} name={sponsor.name} notes={sponsor.notes} onChange={(n, no) => setSponsor({ name: n, notes: no })} />
-                  <StakeholderRow role="Champion" icon={<UserCheck className="w-3 h-3" />} name={champion.name} notes={champion.notes} onChange={(n, no) => setChampion({ name: n, notes: no })} />
-                  <StakeholderRow role="Blocker" icon={<UserX className="w-3 h-3" />} name={blocker.name} notes={blocker.notes} onChange={(n, no) => setBlocker({ name: n, notes: no })} />
-                  <StakeholderRow role="Procurement" icon={<ShoppingCart className="w-3 h-3" />} name={procurement.name} notes={procurement.notes} onChange={(n, no) => setProcurement({ name: n, notes: no })} />
-                </div>
-              </CollapsibleSection>
-
-              {/* Execution Motion */}
-              <CollapsibleSection title="Execution Motion" subtitle="Entry pack, pilot scope, and timeline" defaultOpen={true}>
-                <div className="space-y-3">
-                  <EditableBlock label="Recommended Entry Pack" icon={<Package className="w-3 h-3" />} value={entryPack} onChange={setEntryPack} placeholder="Which package or engagement model opens the door?" compact />
-                  <EditableBlock label="Pilot Scope" icon={<Target className="w-3 h-3" />} value={pilotScope} onChange={setPilotScope} placeholder="Define the initial pilot: users, scope, success criteria." compact />
-                  <EditableBlock label="Timeline Hypothesis" icon={<CalendarDays className="w-3 h-3" />} value={timeline} onChange={setTimeline} placeholder="Week-by-week execution plan." compact />
-                </div>
-              </CollapsibleSection>
-
-              {/* CRM Context */}
-              <CollapsibleSection title="CRM Context" subtitle="Recent engagement and vendor involvement" defaultOpen={false}>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1">
-                      <CalendarDays className="w-3 h-3" /> Last Meeting
-                    </p>
-                    <p className="text-xs text-foreground">{lastMeeting.split('—')[0]}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{lastMeeting.split('—')[1]}</p>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1">
-                      <BarChart3 className="w-3 h-3" /> Engagement Score
-                    </p>
-                    <p className="text-xs font-bold text-foreground">72 / 100</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Active, multi-stakeholder</p>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1">
-                      <Building2 className="w-3 h-3" /> Vendor Involvement
-                    </p>
-                    <p className="text-xs text-foreground">Microsoft CSA assigned</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Azure Swiss GA — Copilot preview pending</p>
-                  </div>
-                </div>
-              </CollapsibleSection>
-
-              {/* Plan Inbox */}
-              {planInbox}
-
-              {/* Risks & Blockers (Sales) */}
-              <CollapsibleSection title="Risks & Blockers" subtitle="Sales risks and deal blockers" defaultOpen={false}>
-                {hydratedPlan ? (
-                  <RisksBlockersSection
-                    risks={hydratedPlan.risks}
-                    focusId={selectedAccount}
-                    onRefresh={refresh}
-                  />
-                ) : aggregatedRisks.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {aggregatedRisks.map((item, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs">
-                        <AlertTriangle className="w-3 h-3 text-destructive/60 mt-0.5 flex-shrink-0" />
-                        <p className="text-muted-foreground">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">No risks identified yet — add signals to surface gaps.</p>
-                )}
-              </CollapsibleSection>
-            </div>
-          )}
 
           {/* ===== BUSINESS TAB ===== */}
           {viewTab === 'business' && (
@@ -987,13 +909,13 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                 </div>
               )}
 
-              {/* Cross-reference to Sales risks */}
+              {/* Cross-reference to Technical tab */}
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/10 border border-border/30">
                 <AlertTriangle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                 <p className="text-[10px] text-muted-foreground">
-                  Risks and blockers are tracked in the{' '}
-                  <button onClick={() => setViewTab('sales')} className="text-foreground underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors">
-                    Sales
+                  Technical risks and delivery feasibility are tracked in the{' '}
+                  <button onClick={() => setViewTab('technical')} className="text-foreground underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors">
+                    Technical
                   </button> tab.
                 </p>
               </div>

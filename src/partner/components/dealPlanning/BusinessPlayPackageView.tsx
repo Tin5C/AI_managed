@@ -1,9 +1,10 @@
-// BusinessPlayPackageView — Storyline Canvas layout
+// BusinessPlayPackageView — Storyline Canvas layout + Customer engagement
 // Partner-only. Read-only display. No mutations.
-// Main canvas: 4 cards (Objective, POV, Plan, Proof). Detail sections in Support drawer.
+// Main canvas: 4 cards (Objective, POV, Plan, Proof). Customer engagement below. Detail in Support drawer.
 
 import { useState } from 'react';
 import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/businessPlayPackageStore';
+import { listObjections } from '@/data/partner/objectionStore';
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import {
   HelpCircle,
@@ -13,6 +14,10 @@ import {
   FileText,
   X,
   Layers,
+  Users,
+  Shield,
+  BarChart3,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -241,6 +246,193 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
             </button>
           )}
         </SectionCard>
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="border-t border-border/40 pt-3 mt-1" />
+
+      {/* ── Customer engagement ── */}
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-foreground">Customer engagement</p>
+
+        {/* 1. Stakeholders & messaging */}
+        <CollapsibleSection title="Stakeholders & messaging" subtitle="Talk tracks by persona" defaultOpen>
+          {b.positioning.talk_tracks.length > 0 ? (
+            <div className="space-y-1.5">
+              {b.positioning.talk_tracks.map((tt, i) => (
+                <SectionCard key={i} className="p-2.5">
+                  <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
+                    <Users className="w-3 h-3 text-primary/50" />
+                    {tt.persona}
+                  </p>
+                  <Body>{truncate(tt.message, 180)}</Body>
+                </SectionCard>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+          )}
+        </CollapsibleSection>
+
+        {/* 2. Objection handling (max 5) */}
+        <CollapsibleSection title="Objection handling" subtitle="Anticipated objections and responses" defaultOpen>
+          {(() => {
+            const objections = listObjections(pkg.focus_id !== '' ? 'alpnova' : '', { account_id: pkg.focus_id || undefined });
+            const items = objections.slice(0, 5);
+            if (items.length > 0) {
+              return (
+                <div className="space-y-1.5">
+                  {items.map((obj) => (
+                    <SectionCard key={obj.id} className="p-2.5">
+                      <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
+                        <Shield className="w-3 h-3 text-primary/50" />
+                        {obj.theme}
+                      </p>
+                      <Body>{obj.root_cause}</Body>
+                      {obj.what_they_need_to_see.length > 0 && (
+                        <ul className="mt-1 space-y-0.5">
+                          {obj.what_they_need_to_see.slice(0, 3).map((item, i) => (
+                            <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                              <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </SectionCard>
+                  ))}
+                </div>
+              );
+            }
+            // Fallback: use open_questions as proxy
+            if (b.open_questions.length > 0) {
+              return (
+                <div className="space-y-1">
+                  {b.open_questions.slice(0, 5).map((q, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <HelpCircle className="w-3 h-3 text-muted-foreground/50 mt-0.5 flex-shrink-0" />
+                      {q}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            return <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>;
+          })()}
+        </CollapsibleSection>
+
+        {/* 3. KPIs */}
+        <CollapsibleSection title="KPIs" subtitle="Success metrics and targets" defaultOpen>
+          {b.commercial_assets.kpis.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {b.commercial_assets.kpis.map((k, i) => (
+                <SectionCard key={i} className="p-2.5">
+                  <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
+                    <BarChart3 className="w-3 h-3 text-primary/50" />
+                    {k.label}
+                  </p>
+                  <p className="text-[11px] text-primary font-medium">{k.target}</p>
+                </SectionCard>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+          )}
+        </CollapsibleSection>
+
+        {/* 4. Delivery assets */}
+        <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, and pilot scope" defaultOpen={false}>
+          <div className="space-y-3">
+            {/* Discovery call agenda */}
+            <div className="space-y-1.5">
+              <Label>Discovery call agenda</Label>
+              {b.delivery_assets.discovery_agenda.length > 0 ? (
+                b.delivery_assets.discovery_agenda.map((d, i) => (
+                  <SectionCard key={i} className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">{d.theme}</p>
+                    <Body>{truncate(d.question, 160)}</Body>
+                  </SectionCard>
+                ))
+              ) : (
+                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+              )}
+            </div>
+
+            {/* Workshop agenda */}
+            <div className="space-y-1.5">
+              <Label>Workshop agenda</Label>
+              {b.delivery_assets.workshop_plan.length > 0 ? (
+                b.delivery_assets.workshop_plan.map((w, i) => (
+                  <SectionCard key={i} className="p-2.5">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+                      <div>
+                        <p className="text-[10px] font-semibold text-foreground">{w.step}</p>
+                        <Body>{truncate(w.description, 120)}</Body>
+                      </div>
+                    </div>
+                  </SectionCard>
+                ))
+              ) : (
+                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+              )}
+            </div>
+
+            {/* Pilot scope */}
+            <div className="space-y-1.5">
+              <Label>Pilot scope</Label>
+              {(b.delivery_assets.pilot_scope.in_scope.length > 0 ||
+                b.delivery_assets.pilot_scope.out_of_scope.length > 0 ||
+                b.delivery_assets.pilot_scope.deliverables.length > 0 ||
+                b.delivery_assets.pilot_scope.stakeholders.length > 0) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  <SectionCard className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">In scope</p>
+                    <ul className="space-y-0.5">
+                      {b.delivery_assets.pilot_scope.in_scope.map((s, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </SectionCard>
+                  <SectionCard className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">Out of scope</p>
+                    <ul className="space-y-0.5">
+                      {b.delivery_assets.pilot_scope.out_of_scope.map((s, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <span className="text-destructive/40 mt-0.5 flex-shrink-0 text-[10px]">-</span> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </SectionCard>
+                  <SectionCard className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">Deliverables</p>
+                    <ul className="space-y-0.5">
+                      {b.delivery_assets.pilot_scope.deliverables.map((d, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {d}
+                        </li>
+                      ))}
+                    </ul>
+                  </SectionCard>
+                  <SectionCard className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">Stakeholders</p>
+                    <ul className="space-y-0.5">
+                      {b.delivery_assets.pilot_scope.stakeholders.map((s, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </SectionCard>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+              )}
+            </div>
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* ── Support Drawer (right-side overlay) ── */}

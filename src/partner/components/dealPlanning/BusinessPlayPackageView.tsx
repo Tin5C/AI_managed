@@ -1,6 +1,7 @@
-// BusinessPlayPackageView — MECE vertical layout
+// BusinessPlayPackageView — Storyline Canvas hero + MECE detail sections
 // Partner-only. Read-only display. No mutations.
-// Single vertical scroll: Strategic → Economic → Execution → Advancement
+// Hero: Objective → Point of View → Plan → Proof
+// Detail (collapsed): Strategic → Economic → Execution → Advancement
 
 import { useState } from 'react';
 import type { BusinessPlayPackage, BusinessVariant, CitationRef } from '@/data/partner/businessPlayPackageStore';
@@ -10,8 +11,13 @@ import {
   ChevronUp,
   FileText,
   X,
+  Target,
+  MessageSquare,
+  ListChecks,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 
 interface Props {
   pkg: BusinessPlayPackage;
@@ -120,6 +126,30 @@ function MECEHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   );
 }
 
+/* ── Storyline Card ── */
+
+function StorylineCard({
+  icon,
+  title,
+  children,
+  className,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('rounded-xl border border-border/50 bg-card p-4 space-y-2', className)}>
+      <div className="flex items-center gap-2">
+        <div className="flex-shrink-0 text-primary">{icon}</div>
+        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</h4>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /* ── Main View ── */
 
 export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange }: Props) {
@@ -128,9 +158,14 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
   const citationCount = pkg.signal_citation_ids?.length ?? 0;
   const isGrounded = activeVariant === 'grounded';
 
+  // Derive plan steps as concise bullets
+  const planSteps = m.execution.plan.steps;
+  // Derive proof lines
+  const proofLines = m.economic.proof;
+
   return (
     <div className="space-y-5">
-      {/* Variant toggle + Sources */}
+      {/* Variant toggle */}
       <div className="flex items-center justify-between">
         {availableVariants.length > 1 && (
           <div className="flex items-center gap-2">
@@ -153,130 +188,193 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
             </div>
           </div>
         )}
-        {citationCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setSourcesOpen(true)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <FileText className="w-3 h-3" />
-            Sources ({citationCount})
-          </button>
-        )}
       </div>
 
-      {/* ── STRATEGIC ── */}
-      <div className="space-y-2">
-        <MECEHeader title="Strategic" subtitle="Objective and point of view" />
-        <SectionCard>
-          <Label>Objective</Label>
-          <ExpandableBody text={m.strategic.objective} />
-        </SectionCard>
-        <SectionCard>
-          <Label>Point of View</Label>
-          <ExpandableBody text={m.strategic.point_of_view} />
-        </SectionCard>
-        {m.strategic.context && (
-          <SectionCard>
-            <Label>Context</Label>
-            <Body>{m.strategic.context}</Body>
-          </SectionCard>
-        )}
-      </div>
-
-      {/* ── ECONOMIC ── */}
-      <div className="space-y-2">
-        <MECEHeader title="Economic" subtitle="Value hypothesis, KPIs, and proof" />
-        <SectionCard>
-          <Label>Value Hypothesis</Label>
-          <ExpandableBody text={m.economic.value_hypothesis} />
-        </SectionCard>
-        <SectionCard>
-          <Label>KPIs</Label>
-          <ul className="space-y-1">
-            {m.economic.kpis.map((kpi, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
-                <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                {kpi}
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-        {m.economic.proof.length > 0 && (
-          <SectionCard>
-            <Label>Proof</Label>
-            <ul className="space-y-2">
-              {m.economic.proof.map((p, i) => (
-                <li key={i}>
-                  <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                    <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                    {p.statement}
-                  </p>
-                  <CitationBadges citations={p.citations} isGrounded={isGrounded} />
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        )}
-      </div>
-
-      {/* ── EXECUTION ── */}
-      <div className="space-y-2">
-        <MECEHeader title="Execution" subtitle="Plan steps and delivery scope" />
-        <SectionCard>
-          <Label>Plan</Label>
-          <ul className="space-y-1.5">
-            {m.execution.plan.steps.map((step, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
-                <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                {step}
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-        {m.execution.delivery.length > 0 && (
-          <div className="space-y-1.5">
-            {m.execution.delivery.map((d, i) => (
-              <SectionCard key={i} className="p-2.5">
-                <p className="text-[10px] font-semibold text-foreground">{d.title}</p>
-                {d.body && <Body>{d.body}</Body>}
-                <CitationBadges citations={d.citations} isGrounded={isGrounded} />
-              </SectionCard>
-            ))}
+      {/* ═══════ STORYLINE CANVAS (hero) ═══════ */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Storyline</h3>
+            <p className="text-[10px] text-muted-foreground">Narrative arc for the selected play</p>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* ── ADVANCEMENT ── */}
-      <div className="space-y-2">
-        <MECEHeader title="Advancement" subtitle="Required info and objection handling" />
-        {m.advancement.required_info_from_customer.length > 0 && (
-          <SectionCard>
-            <Label>Required info from customer</Label>
+        <div className="grid gap-3">
+          {/* Objective */}
+          <StorylineCard icon={<Target className="w-3.5 h-3.5" />} title="Objective">
+            <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.objective}</p>
+          </StorylineCard>
+
+          {/* Point of View */}
+          <StorylineCard icon={<MessageSquare className="w-3.5 h-3.5" />} title="Point of View">
+            <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.point_of_view}</p>
+          </StorylineCard>
+
+          {/* Plan */}
+          <StorylineCard icon={<ListChecks className="w-3.5 h-3.5" />} title="Plan">
             <ul className="space-y-1.5">
-              {m.advancement.required_info_from_customer.map((q, i) => (
+              {planSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
                   <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                  {q}
+                  {step}
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
-        {m.advancement.objections.length > 0 && (
-          <SectionCard>
-            <Label>Objections</Label>
-            <ul className="space-y-2">
-              {m.advancement.objections.map((obj, i) => (
-                <li key={i}>
-                  <p className="text-xs text-foreground font-medium">{obj.objection}</p>
-                  {obj.mitigation && <p className="text-xs text-muted-foreground mt-0.5">{obj.mitigation}</p>}
-                  <CitationBadges citations={obj.citations} isGrounded={isGrounded} />
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        )}
+          </StorylineCard>
+
+          {/* Proof */}
+          <StorylineCard icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Proof">
+            {proofLines.length > 0 ? (
+              <ul className="space-y-1.5">
+                {proofLines.map((p, i) => (
+                  <li key={i}>
+                    <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                      {p.statement}
+                    </p>
+                    <CitationBadges citations={p.citations} isGrounded={isGrounded} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[11px] text-muted-foreground italic">No proof evidence available.</p>
+            )}
+            {/* Sources button attached to Proof card */}
+            {citationCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setSourcesOpen(true)}
+                className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FileText className="w-3 h-3" />
+                Sources ({citationCount})
+              </button>
+            )}
+          </StorylineCard>
+        </div>
+      </div>
+
+      {/* ═══════ DETAILED MECE SECTIONS (secondary, collapsed) ═══════ */}
+      <div className="space-y-2 pt-2 border-t border-border/30">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Detailed breakdown</p>
+
+        {/* Strategic */}
+        <CollapsibleSection title="Strategic" subtitle="Objective and point of view" defaultOpen={true} variant="secondary">
+          <div className="space-y-2">
+            <SectionCard>
+              <Label>Objective</Label>
+              <ExpandableBody text={m.strategic.objective} />
+            </SectionCard>
+            <SectionCard>
+              <Label>Point of View</Label>
+              <ExpandableBody text={m.strategic.point_of_view} />
+            </SectionCard>
+            {m.strategic.context && (
+              <SectionCard>
+                <Label>Context</Label>
+                <Body>{m.strategic.context}</Body>
+              </SectionCard>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        {/* Economic */}
+        <CollapsibleSection title="Economic" subtitle="Value hypothesis, KPIs, and proof" defaultOpen={false} variant="secondary">
+          <div className="space-y-2">
+            <SectionCard>
+              <Label>Value Hypothesis</Label>
+              <ExpandableBody text={m.economic.value_hypothesis} />
+            </SectionCard>
+            <SectionCard>
+              <Label>KPIs</Label>
+              <ul className="space-y-1">
+                {m.economic.kpis.map((kpi, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
+                    <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                    {kpi}
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+            {m.economic.proof.length > 0 && (
+              <SectionCard>
+                <Label>Proof</Label>
+                <ul className="space-y-2">
+                  {m.economic.proof.map((p, i) => (
+                    <li key={i}>
+                      <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                        {p.statement}
+                      </p>
+                      <CitationBadges citations={p.citations} isGrounded={isGrounded} />
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        {/* Execution */}
+        <CollapsibleSection title="Execution" subtitle="Plan steps and delivery scope" defaultOpen={false} variant="secondary">
+          <div className="space-y-2">
+            <SectionCard>
+              <Label>Plan</Label>
+              <ul className="space-y-1.5">
+                {m.execution.plan.steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
+                    <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+            {m.execution.delivery.length > 0 && (
+              <div className="space-y-1.5">
+                {m.execution.delivery.map((d, i) => (
+                  <SectionCard key={i} className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">{d.title}</p>
+                    {d.body && <Body>{d.body}</Body>}
+                    <CitationBadges citations={d.citations} isGrounded={isGrounded} />
+                  </SectionCard>
+                ))}
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        {/* Advancement */}
+        <CollapsibleSection title="Advancement" subtitle="Required info and objection handling" defaultOpen={false} variant="secondary">
+          <div className="space-y-2">
+            {m.advancement.required_info_from_customer.length > 0 && (
+              <SectionCard>
+                <Label>Required info from customer</Label>
+                <ul className="space-y-1.5">
+                  {m.advancement.required_info_from_customer.map((q, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
+                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                      {q}
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
+            {m.advancement.objections.length > 0 && (
+              <SectionCard>
+                <Label>Objections</Label>
+                <ul className="space-y-2">
+                  {m.advancement.objections.map((obj, i) => (
+                    <li key={i}>
+                      <p className="text-xs text-foreground font-medium">{obj.objection}</p>
+                      {obj.mitigation && <p className="text-xs text-muted-foreground mt-0.5">{obj.mitigation}</p>}
+                      <CitationBadges citations={obj.citations} isGrounded={isGrounded} />
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* Sources modal */}

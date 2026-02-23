@@ -184,7 +184,7 @@ function ReadinessCompact({ score }: { score: number }) {
 /* ─── Section IDs for navigation ─── */
 
 const SECTIONS = [
-  { id: 'ai-exec-summary', label: 'Executive' },
+  { id: 'ai-exec-summary', label: 'Executive State' },
   { id: 'ai-signals', label: 'This Week' },
   { id: 'ai-initiatives', label: 'Initiatives' },
   { id: 'ai-trends', label: 'Trends' },
@@ -541,56 +541,54 @@ export function AccountIntelligenceView({ focusId }: AccountIntelligenceViewProp
         {/* SECTION 1: Executive Summary */}
         <DocSection
           id="ai-exec-summary"
-          title="Executive Summary"
+          title="Executive State"
           icon={<Target className="w-3.5 h-3.5" />}
           isOpen={openSection === 'ai-exec-summary'}
           onToggle={() => toggleSection('ai-exec-summary')}
           sectionRef={(el) => { sectionRefs.current['ai-exec-summary'] = el; }}
         >
           {snapshot ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                <KVRow label="Industry" value={snapshot.industry} />
-                <KVRow label="AI Maturity" value={snapshot.maturity_level} />
-                <KVRow label="Primary Vendor" value={snapshot.primary_vendor_relationship} />
-                <KVRow label="Competitive Pressure" value={snapshot.competitive_pressure_level} />
-                <KVRow label="Est. Spend" value={commercial?.estimated_spend_band} />
-                <KVRow label="Transformation" value={snapshot.transformation_stage} />
-              </div>
+            <div className="space-y-3">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border/40">
+                    <th className="text-left py-1.5 pr-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Dimension</th>
+                    <th className="text-left py-1.5 pr-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Current State</th>
+                    <th className="text-left py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Confidence</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/20">
+                  <tr>
+                    <td className="py-1.5 pr-3 text-muted-foreground">AI Maturity</td>
+                    <td className="py-1.5 pr-3 text-foreground">{snapshot.maturity_level ?? '—'}</td>
+                    <td className="py-1.5"><ConfidenceBadge level="High" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 pr-3 text-muted-foreground">Platform Footprint</td>
+                    <td className="py-1.5 pr-3 text-foreground">{snapshot.primary_vendor_relationship ?? '—'}</td>
+                    <td className="py-1.5"><ConfidenceBadge level="High" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 pr-3 text-muted-foreground">Competitive Pressure</td>
+                    <td className="py-1.5 pr-3 text-foreground">{snapshot.competitive_pressure_level ?? '—'}</td>
+                    <td className="py-1.5"><ConfidenceBadge level="Medium" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 pr-3 text-muted-foreground">Transformation Direction</td>
+                    <td className="py-1.5 pr-3 text-foreground">{snapshot.transformation_stage ?? '—'}</td>
+                    <td className="py-1.5"><ConfidenceBadge level="Medium" /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-1.5 pr-3 text-muted-foreground">Investment Horizon</td>
+                    <td className="py-1.5 pr-3 text-foreground">{commercial?.renewal_windows?.[0] ?? commercial?.estimated_spend_band ?? '—'}</td>
+                    <td className="py-1.5"><ConfidenceBadge level="Low" /></td>
+                  </tr>
+                </tbody>
+              </table>
 
-              {/* Top 3 priorities */}
-              {snapshot.strategic_priority_tags && snapshot.strategic_priority_tags.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Top Priorities</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {snapshot.strategic_priority_tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-primary/5 text-primary border border-primary/10">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Renewal window */}
-              {commercial?.renewal_windows && commercial.renewal_windows.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Renewal Windows</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {commercial.renewal_windows.map((w, i) => (
-                      <span key={i} className="text-xs text-muted-foreground">{w}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Why this account matters */}
-              <div className="rounded-lg bg-muted/20 border border-border/30 p-3 space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Why This Account Matters</p>
-                <p className="text-xs text-foreground leading-relaxed">
-                  {snapshot.primary_vendor_relationship ? `Strong ${snapshot.primary_vendor_relationship} relationship` : 'Active vendor engagement'} combined with {snapshot.maturity_level?.toLowerCase() ?? 'emerging'} AI maturity creates a natural engagement window. {snapshot.competitive_pressure_level === 'High' ? 'High competitive pressure means timing is critical.' : 'Stable competitive landscape allows for deliberate positioning.'}{' '}
-                  {strategyPillars && strategyPillars.strategy_pillars.length > 0 ? `Strategic focus on ${strategyPillars.strategy_pillars[0].title.toLowerCase()} aligns with partner capabilities.` : ''}
-                </p>
+              <div className="flex items-center gap-3 pt-1">
+                <ReadinessCompact score={readiness.score} />
+                <span className="text-[10px] text-muted-foreground/60">Confidence reflects how much supporting context we currently have.</span>
               </div>
             </div>
           ) : (

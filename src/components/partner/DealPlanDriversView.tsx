@@ -602,13 +602,75 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
           {/* ===== Plan workspace section boundary ===== */}
           <div className="border-t border-border/40 pt-4 mt-2 space-y-1">
             <p className="text-sm font-semibold text-foreground">Plan workspace</p>
-            <p className="text-[11px] text-muted-foreground">MECE narrative for the selected account.</p>
+            <p className="text-[11px] text-muted-foreground">Storyline narrative for the selected account.</p>
           </div>
 
           {/* ===== Plan Inbox ===== */}
           {planInbox}
 
-          {/* ===== MECE NARRATIVE (primary single-scroll output) ===== */}
+          {/* ===== Copy Composer Input (in Storyline area) ===== */}
+          {selectedAccount && (
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  const activePlay = getActivePlay(selectedAccount);
+                  const lookupParams = {
+                    focusId: selectedAccount,
+                    playId: activePlay?.playId ?? '',
+                    type: engagementType ?? '',
+                    motion: motion ?? '',
+                  };
+                  const variants = getAvailableVariants(lookupParams);
+                  const effectiveVariant = variants.includes(businessVariant)
+                    ? businessVariant
+                    : variants[0] ?? null;
+                  const pkg = effectiveVariant
+                    ? getBusinessPlayPackage({ ...lookupParams, variant: effectiveVariant })
+                    : null;
+
+                  if (pkg) {
+                    const output = {
+                      focus_id: pkg.focus_id,
+                      play_id: pkg.play_id,
+                      variant: pkg.variant,
+                      type: pkg.type,
+                      motion: pkg.motion,
+                      signal_citation_ids: pkg.signal_citation_ids,
+                      mece: pkg.mece,
+                    };
+                    const json = JSON.stringify(output, null, 2);
+                    try {
+                      await navigator.clipboard.writeText(json);
+                      toast.success('MECE output copied');
+                    } catch {
+                      setComposerFallbackJson(json);
+                    }
+                  } else {
+                    const input = buildComposerInputBusiness({
+                      focusId: selectedAccount,
+                      playId: activePlay?.playId ?? '',
+                      type: engagementType ?? '',
+                      motion: motion ?? '',
+                      activeSignalIds: getActiveSignalIds(selectedAccount),
+                    });
+                    const json = JSON.stringify(input, null, 2);
+                    try {
+                      await navigator.clipboard.writeText(json);
+                      toast.success('Composer input copied');
+                    } catch {
+                      setComposerFallbackJson(json);
+                    }
+                  }
+                }}
+                className="h-8 px-3 rounded text-[11px] font-medium whitespace-nowrap transition-colors border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 flex items-center gap-1.5"
+              >
+                <Copy className="w-3 h-3" />
+                Copy Composer Input
+              </button>
+            </div>
+          )}
+
+          {/* ===== STORYLINE + MECE DETAIL (primary output) ===== */}
           {(() => {
             const activePlay = selectedAccount ? getActivePlay(selectedAccount) : null;
             const lookupParams = {
@@ -710,68 +772,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
               </>
             );
           })()}
-
-          {/* Copy Composer Input — outputs MECE JSON */}
-          {selectedAccount && (
-            <div className="flex justify-end pt-1">
-              <button
-                onClick={async () => {
-                  const activePlay = getActivePlay(selectedAccount);
-                  const lookupParams = {
-                    focusId: selectedAccount,
-                    playId: activePlay?.playId ?? '',
-                    type: engagementType ?? '',
-                    motion: motion ?? '',
-                  };
-                  const variants = getAvailableVariants(lookupParams);
-                  const effectiveVariant = variants.includes(businessVariant)
-                    ? businessVariant
-                    : variants[0] ?? null;
-                  const pkg = effectiveVariant
-                    ? getBusinessPlayPackage({ ...lookupParams, variant: effectiveVariant })
-                    : null;
-
-                  if (pkg) {
-                    const output = {
-                      focus_id: pkg.focus_id,
-                      play_id: pkg.play_id,
-                      variant: pkg.variant,
-                      type: pkg.type,
-                      motion: pkg.motion,
-                      signal_citation_ids: pkg.signal_citation_ids,
-                      mece: pkg.mece,
-                    };
-                    const json = JSON.stringify(output, null, 2);
-                    try {
-                      await navigator.clipboard.writeText(json);
-                      toast.success('MECE output copied');
-                    } catch {
-                      setComposerFallbackJson(json);
-                    }
-                  } else {
-                    const input = buildComposerInputBusiness({
-                      focusId: selectedAccount,
-                      playId: activePlay?.playId ?? '',
-                      type: engagementType ?? '',
-                      motion: motion ?? '',
-                      activeSignalIds: getActiveSignalIds(selectedAccount),
-                    });
-                    const json = JSON.stringify(input, null, 2);
-                    try {
-                      await navigator.clipboard.writeText(json);
-                      toast.success('Composer input copied');
-                    } catch {
-                      setComposerFallbackJson(json);
-                    }
-                  }
-                }}
-                className="h-8 px-3 rounded text-[11px] font-medium whitespace-nowrap transition-colors border border-border text-muted-foreground hover:text-foreground hover:bg-muted/30 flex items-center gap-1.5"
-              >
-                <Copy className="w-3 h-3" />
-                Copy Composer Input
-              </button>
-            </div>
-          )}
 
           {/* Composer Fallback Modal */}
           {composerFallbackJson && (

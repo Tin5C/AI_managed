@@ -105,7 +105,7 @@ export function PartnerModeSection() {
           <DealPlanDriversView onGoToQuickBrief={() => setMode('quick-brief')} onGoToAccountIntelligence={() => setMode('account-intelligence')} />
         </div>
       ) : (
-        <AccountIntelligenceView focusId={FOCUS_ID} onGoToDealPlanning={() => setMode('deal-planning')} />
+        <AccountIntelligenceView focusId={FOCUS_ID} />
       )}
     </section>
   );

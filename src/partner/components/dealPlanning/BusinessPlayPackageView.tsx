@@ -257,96 +257,32 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
               </button>
             </div>
 
-            {/* Deal Strategy */}
-            <CollapsibleSection title="Deal Strategy" subtitle="What, How, Why" defaultOpen>
-              <div className="space-y-2.5">
-                <SectionCard>
-                  <Label>What</Label>
-                  <ExpandableBody text={b.deal_strategy.what} />
-                </SectionCard>
-                <SectionCard>
-                  <Label>How</Label>
-                  <ol className="space-y-1.5 pl-0.5">
-                    {b.deal_strategy.how.map((step, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
-                        <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
-                        {step}
-                      </li>
-                    ))}
-                  </ol>
-                </SectionCard>
-                <SectionCard>
-                  <Label>Why</Label>
-                  <ExpandableBody text={b.deal_strategy.why} />
-                </SectionCard>
+            {/* Value Hypothesis */}
+            <CollapsibleSection title="Value Hypothesis" subtitle="Expected business outcomes" defaultOpen>
+              <div className="space-y-1.5">
+                {b.commercial_assets.value_hypotheses.map((v, i) => (
+                  <SectionCard key={i}>
+                    <p className="text-[10px] font-semibold text-foreground">{v.label}</p>
+                    <ExpandableBody text={v.description} />
+                  </SectionCard>
+                ))}
               </div>
             </CollapsibleSection>
 
-            {/* Positioning */}
-            <CollapsibleSection title="Positioning" subtitle="Executive POV and stakeholder talk tracks" defaultOpen={false}>
-              <div className="space-y-2.5">
-                <SectionCard>
-                  <Label>Executive Point of View</Label>
-                  <ExpandableBody text={b.positioning.executive_pov} />
-                </SectionCard>
-                <div className="space-y-1.5">
-                  <Label>Talk Tracks</Label>
-                  {b.positioning.talk_tracks.map((tt, i) => (
-                    <SectionCard key={i}>
-                      <p className="text-[10px] font-semibold text-foreground">{tt.persona}</p>
-                      <ExpandableBody text={tt.message} />
-                    </SectionCard>
-                  ))}
-                </div>
+            {/* KPIs */}
+            <CollapsibleSection title="KPIs" subtitle="Target metrics" defaultOpen={false}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {b.commercial_assets.kpis.map((k, i) => (
+                  <SectionCard key={i} className="p-2.5">
+                    <p className="text-[10px] font-semibold text-foreground">{k.label}</p>
+                    <p className="text-[11px] text-primary font-medium">{k.target}</p>
+                  </SectionCard>
+                ))}
               </div>
             </CollapsibleSection>
 
-            {/* Commercial Assets */}
-            <CollapsibleSection title="Commercial Assets" subtitle="ROI prompts, value hypotheses, KPIs, sizing inputs" defaultOpen={false}>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label>ROI Prompts</Label>
-                  {b.commercial_assets.roi_prompts.map((r, i) => (
-                    <SectionCard key={i}>
-                      <p className="text-[10px] font-semibold text-foreground">{r.label}</p>
-                      <ExpandableBody text={r.question} />
-                    </SectionCard>
-                  ))}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Value Hypotheses</Label>
-                  {b.commercial_assets.value_hypotheses.map((v, i) => (
-                    <SectionCard key={i}>
-                      <p className="text-[10px] font-semibold text-foreground">{v.label}</p>
-                      <ExpandableBody text={v.description} />
-                    </SectionCard>
-                  ))}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>KPIs</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {b.commercial_assets.kpis.map((k, i) => (
-                      <SectionCard key={i} className="p-2.5">
-                        <p className="text-[10px] font-semibold text-foreground">{k.label}</p>
-                        <p className="text-[11px] text-primary font-medium">{k.target}</p>
-                      </SectionCard>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Sizing Inputs</Label>
-                  {b.commercial_assets.sizing_inputs.map((s, i) => (
-                    <SectionCard key={i} className="p-2.5">
-                      <p className="text-[10px] font-semibold text-foreground">{s.label}</p>
-                      <Body>{s.value}</Body>
-                    </SectionCard>
-                  ))}
-                </div>
-              </div>
-            </CollapsibleSection>
-
-            {/* Delivery Assets */}
-            <CollapsibleSection title="Delivery Assets" subtitle="Discovery agenda, workshop plan, pilot scope" defaultOpen={false}>
+            {/* Delivery */}
+            <CollapsibleSection title="Delivery" subtitle="Discovery agenda, workshop plan, pilot scope" defaultOpen={false}>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Discovery Agenda</Label>
@@ -419,34 +355,8 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
               </div>
             </CollapsibleSection>
 
-            {/* Enablement */}
-            <CollapsibleSection title="Enablement" subtitle="Seller and engineer preparation" defaultOpen={false}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <SectionCard>
-                  <Label>Seller</Label>
-                  <ul className="space-y-1.5">
-                    {b.enablement.seller.map((s, i) => (
-                      <li key={i} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
-                      </li>
-                    ))}
-                  </ul>
-                </SectionCard>
-                <SectionCard>
-                  <Label>Engineer</Label>
-                  <ul className="space-y-1.5">
-                    {b.enablement.engineer.map((s, i) => (
-                      <li key={i} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
-                      </li>
-                    ))}
-                  </ul>
-                </SectionCard>
-              </div>
-            </CollapsibleSection>
-
-            {/* Open Questions */}
-            <CollapsibleSection title="Open Questions" subtitle="Items to validate before advancing" defaultOpen={false}>
+            {/* Required info from customer */}
+            <CollapsibleSection title="Required info from customer" subtitle="Items to validate before advancing" defaultOpen={false}>
               <ul className="space-y-1.5">
                 {b.open_questions.map((q, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">

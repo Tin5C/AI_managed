@@ -70,6 +70,9 @@ interface RecommendedPlaysPanelProps {
   /** Authority Trend focus from Account Intelligence */
   focusTrend?: { id: string; title: string } | null;
   onClearTrendFocus?: () => void;
+  /** Auto-open evidence drawer on mount (from Account Intelligence) */
+  initialOpenEvidence?: boolean;
+  onEvidenceDrawerOpened?: () => void;
 }
 
 // ============= Main Component =============
@@ -92,6 +95,8 @@ export function RecommendedPlaysPanel({
   onClearFocus,
   focusTrend,
   onClearTrendFocus,
+  initialOpenEvidence,
+  onEvidenceDrawerOpened,
 }: RecommendedPlaysPanelProps) {
   const [driversOpen, setDriversOpen] = useState(false);
   // Inline loader on mount
@@ -108,6 +113,15 @@ export function RecommendedPlaysPanel({
   const [addEvidenceMode, setAddEvidenceMode] = useState<'upload' | 'paste' | 'link' | null>(null);
   const [pasteText, setPasteText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+
+  // Auto-open evidence drawer when entering from Account Intelligence
+  useEffect(() => {
+    if (initialOpenEvidence) {
+      setShowReviewDrawer(true);
+      setReviewTab('evidence');
+      onEvidenceDrawerOpened?.();
+    }
+  }, [initialOpenEvidence, onEvidenceDrawerOpened]);
 
   // Active signals from the picker store
   const activeSignalIds = useMemo(() => getActiveSignalIds(accountId), [accountId, promotedSignals, showPicker]);

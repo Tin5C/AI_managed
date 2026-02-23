@@ -21,7 +21,14 @@ import {
   MessageSquare,
   ChevronRight,
   BookOpen,
+  Plus,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { resolveAccountIntelligence } from '@/services/accountIntelligence';
@@ -456,14 +463,33 @@ export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: Account
             <ReadinessCompact score={readiness.score} />
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {onGoToDealPlanning && (
-              <button
-                onClick={onGoToDealPlanning}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-background hover:border-primary/30 hover:text-primary transition-colors"
-              >
-                <Brain className="w-3 h-3" />
-                Open Deal Planning
-              </button>
+            {onGoToDealPlanning && focusId && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        setDealPlanTrigger({
+                          signalId: '',
+                          customer: focusId,
+                          signalTitle: '',
+                          focusId,
+                          entry: 'add_account_intelligence',
+                          openEvidence: true,
+                        });
+                        onGoToDealPlanning();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-background hover:border-primary/30 hover:text-primary transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add account intelligence
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[260px] text-xs leading-relaxed">
+                    Add notes, evidence, and signals. This improves recommendations for you and your team.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>

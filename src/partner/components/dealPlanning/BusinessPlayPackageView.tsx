@@ -199,20 +199,21 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           </div>
         </div>
 
-        <div className="grid gap-3">
-          {/* Objective */}
+        {/* Full-width cards */}
+        <div className="grid gap-2">
           <StorylineCard icon={<Target className="w-3.5 h-3.5" />} title="Objective">
             <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.objective}</p>
           </StorylineCard>
 
-          {/* Point of View */}
           <StorylineCard icon={<MessageSquare className="w-3.5 h-3.5" />} title="Point of View">
             <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.point_of_view}</p>
           </StorylineCard>
+        </div>
 
-          {/* Plan */}
+        {/* Plan + Proof: 2-column on desktop, stacked on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <StorylineCard icon={<ListChecks className="w-3.5 h-3.5" />} title="Plan">
-            <ul className="space-y-1.5">
+            <ul className="space-y-1">
               {planSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
                   <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
@@ -222,10 +223,9 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
             </ul>
           </StorylineCard>
 
-          {/* Proof */}
           <StorylineCard icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Proof">
             {proofLines.length > 0 ? (
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {proofLines.map((p, i) => (
                   <li key={i}>
                     <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
@@ -239,12 +239,11 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
             ) : (
               <p className="text-[11px] text-muted-foreground italic">No proof evidence available.</p>
             )}
-            {/* Sources button attached to Proof card */}
             {citationCount > 0 && (
               <button
                 type="button"
                 onClick={() => setSourcesOpen(true)}
-                className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 <FileText className="w-3 h-3" />
                 Sources ({citationCount})

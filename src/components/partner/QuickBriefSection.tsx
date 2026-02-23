@@ -36,15 +36,13 @@ import {
   deriveImpactArea,
 } from '@/data/partner/dealPlanningInboxStore';
 import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
+import { getActiveContextDate, setActiveContextDate } from '@/data/partner/contextSessionStore';
 
 const ACCOUNTS = [
   { id: 'schindler', label: 'Schindler' },
   { id: 'sulzer', label: 'Sulzer' },
   { id: 'ubs', label: 'UBS' },
 ];
-
-const WEEK_OF = '2026-02-10';
-const TIME_KEY = '2026-W07';
 const BATCH_SIZE = 5;
 
 type BriefMode = 'curated' | 'on-demand';
@@ -93,16 +91,21 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
   const [onDemandOutput, setOnDemandOutput] = useState<string | null>(null);
   const [onDemandDraftId, setOnDemandDraftId] = useState<string | null>(null);
 
+  // Shared context date (single source of truth)
+  const WEEK_OF = getActiveContextDate();
+  const TIME_KEY = toIsoWeekKey({ weekOf: WEEK_OF });
+
   // Listen for trigger events from Story modals
   const handleTrigger = useRef(() => {
     const ctx = consumeQuickBriefTrigger();
     if (ctx) {
       if (import.meta.env.DEV) {
         const focusId = 'schindler';
-        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId, weekOf: WEEK_OF });
+        const weekOf = getActiveContextDate();
+        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId, weekOf });
         console.log('[Quick Brief launch]', {
           focusId: meta.focusId,
-          weekOf: WEEK_OF,
+          weekOf,
           weekKey: meta.weekKey,
           vendorId: meta.vendorId,
         });
@@ -136,8 +139,8 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
 
   // Signal data for selected account
   const focusId = selectedAccount ?? 'schindler';
-  const canonicalWeekKey = useMemo(() => toIsoWeekKey({ weekOf: WEEK_OF }), []);
-  const rawSignals = useMemo(() => listSignals(focusId, WEEK_OF), [focusId]);
+  const canonicalWeekKey = useMemo(() => toIsoWeekKey({ weekOf: WEEK_OF }), [WEEK_OF]);
+  const rawSignals = useMemo(() => listSignals(focusId, WEEK_OF), [focusId, WEEK_OF]);
   const signals = useMemo(() => enrichSignals(rawSignals, focusId), [rawSignals, focusId]);
 
   const canGenerate = selectedAccount !== null;

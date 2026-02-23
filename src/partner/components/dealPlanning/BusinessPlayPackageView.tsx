@@ -254,29 +254,8 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         </div>
       </div>
 
-      {/* ═══════ DETAILED MECE SECTIONS (secondary, collapsed) ═══════ */}
+      {/* ═══════ SECONDARY SECTIONS (progressive disclosure) ═══════ */}
       <div className="space-y-2 pt-2 border-t border-border/30">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Detailed breakdown</p>
-
-        {/* Strategic */}
-        <CollapsibleSection title="Strategic" subtitle="Objective and point of view" defaultOpen={true} variant="secondary">
-          <div className="space-y-2">
-            <SectionCard>
-              <Label>Objective</Label>
-              <ExpandableBody text={m.strategic.objective} />
-            </SectionCard>
-            <SectionCard>
-              <Label>Point of View</Label>
-              <ExpandableBody text={m.strategic.point_of_view} />
-            </SectionCard>
-            {m.strategic.context && (
-              <SectionCard>
-                <Label>Context</Label>
-                <Body>{m.strategic.context}</Body>
-              </SectionCard>
-            )}
-          </div>
-        </CollapsibleSection>
 
         {/* Economic */}
         <CollapsibleSection title="Economic" subtitle="Value hypothesis, KPIs, and proof" defaultOpen={false} variant="secondary">
@@ -371,6 +350,26 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
                     </li>
                   ))}
                 </ul>
+              </SectionCard>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        {/* Strategic Breakdown — appendix, collapsed by default */}
+        <CollapsibleSection title="Strategic Breakdown (Support)" subtitle="Objective and point of view detail" defaultOpen={false} variant="secondary">
+          <div className="space-y-2">
+            <SectionCard>
+              <Label>Objective</Label>
+              <ExpandableBody text={m.strategic.objective} />
+            </SectionCard>
+            <SectionCard>
+              <Label>Point of View</Label>
+              <ExpandableBody text={m.strategic.point_of_view} />
+            </SectionCard>
+            {m.strategic.context && (
+              <SectionCard>
+                <Label>Context</Label>
+                <Body>{m.strategic.context}</Body>
               </SectionCard>
             )}
           </div>

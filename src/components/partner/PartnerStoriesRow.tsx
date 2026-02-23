@@ -2,6 +2,7 @@
 // Contextual signals supporting Deal Planning workspace
 
 import { useState, useCallback, useMemo } from 'react';
+import { featureFlags } from '@/config/featureFlags';
 import { ChevronRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SignalIntelligencePanel } from './SignalIntelligencePanel';
@@ -187,6 +188,9 @@ export function PartnerStoriesRow({
   const TIME_KEY = '2026-W07';
   const CUSTOMER = 'schindler';
   const weeklyAvailable = hasWeeklySignals(CUSTOMER, TIME_KEY);
+
+  // Account Intelligence Feed hidden intentionally (UI simplification v2)
+  if (!featureFlags.showAccountIntelligenceFeed) return null;
 
   if (homepageStories.length === 0 && !weeklyAvailable) {
     return (

@@ -100,7 +100,8 @@ import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
 import { getDealPlanningSelection } from '@/data/partner/dealPlanningSelectionStore';
-import { getActiveContextDate } from '@/data/partner/contextSessionStore';
+
+const WEEK_OF = '2026-02-10';
 
 const ACCOUNTS = [
   { id: 'schindler', label: 'Schindler' },
@@ -309,8 +310,6 @@ function NextActionStrip({ readinessScore }: { readinessScore: number | null }) 
 // ============= Main Component =============
 
 export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligence }: DealPlanDriversViewProps) {
-  // Shared context date (single source of truth)
-  const WEEK_OF = getActiveContextDate();
   const [, forceUpdate] = useState(0);
   const refresh = useCallback(() => forceUpdate((n) => n + 1), []);
   const strategicFramingRef = useRef<HTMLDivElement>(null);

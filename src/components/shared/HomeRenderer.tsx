@@ -250,18 +250,9 @@ export function HomeRenderer() {
         );
 
       case 'growth':
-        // Use PartnerGrowthSection for partner space (includes expertise signals)
+        // Partner growth is now rendered inside capabilityBrand section
         if (spaceType === 'partner') {
-          return (
-            <PartnerGrowthSection
-              key={section.id}
-              onSkillClick={() => setSkillPanelOpen(true)}
-              onEventsClick={() => setEventsPanelOpen(true)}
-              onExpertiseClick={() => {
-                // Could open a full expertise panel in the future
-              }}
-            />
-          );
+          return null;
         }
         // Use regular GrowthPresenceSection for internal space
         return spaceConfig.features.skillOfWeek || spaceConfig.features.events ? (
@@ -311,27 +302,14 @@ export function HomeRenderer() {
         ) : null;
 
       case 'expertCorners':
+        // Partner: hidden from top-level (kept in config, just not rendered)
+        if (spaceType === 'partner') return null;
         return spaceConfig.features.expertCorners ? (
-          spaceType === 'partner' ? (
-            <CollapsibleSection
-              key={section.id}
-              title="Learning & Explainers"
-              subtitle="Educational deep dives and solution explainers."
-              defaultOpen={false}
-              variant="secondary"
-            >
-              <ExpertCornersRail
-                title={section.title}
-                subtitle=""
-              />
-            </CollapsibleSection>
-          ) : (
-            <ExpertCornersRail
-              key={section.id}
-              title={section.title}
-              subtitle={section.subtitle}
-            />
-          )
+          <ExpertCornersRail
+            key={section.id}
+            title={section.title}
+            subtitle={section.subtitle}
+          />
         ) : null;
 
       case 'trendingPacks':
@@ -339,6 +317,8 @@ export function HomeRenderer() {
         return null;
 
       case 'onDemandBriefings':
+        // Partner: hidden from top-level (kept in config, just not rendered)
+        if (spaceType === 'partner') return null;
         return spaceConfig.features.onDemandBriefings ? (
           <CollapsibleSection
             key={section.id}
@@ -361,6 +341,16 @@ export function HomeRenderer() {
             variant="secondary"
           >
             <CapabilitySnapshotCard />
+            {/* Growth + Expertise Signals nested under Capability for partner */}
+            {spaceType === 'partner' && (
+              <div className="mt-4">
+                <PartnerGrowthSection
+                  onSkillClick={() => setSkillPanelOpen(true)}
+                  onEventsClick={() => setEventsPanelOpen(true)}
+                  onExpertiseClick={() => {}}
+                />
+              </div>
+            )}
           </CollapsibleSection>
         ) : null;
 

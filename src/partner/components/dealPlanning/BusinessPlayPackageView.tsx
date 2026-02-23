@@ -1,23 +1,20 @@
-// BusinessPlayPackageView — Storyline Canvas hero + MECE detail sections
+// BusinessPlayPackageView — Storyline Canvas layout
 // Partner-only. Read-only display. No mutations.
-// Hero: Objective → Point of View → Plan → Proof
-// Detail (collapsed): Strategic → Economic → Execution → Advancement
+// Main canvas: 4 cards (Objective, POV, Plan, Proof). Detail sections in Support drawer.
 
 import { useState } from 'react';
-import type { BusinessPlayPackage, BusinessVariant, CitationRef } from '@/data/partner/businessPlayPackageStore';
+import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/businessPlayPackageStore';
+import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import {
+  HelpCircle,
   ChevronRight,
   ChevronDown,
   ChevronUp,
   FileText,
   X,
-  Target,
-  MessageSquare,
-  ListChecks,
-  ShieldCheck,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 
 interface Props {
   pkg: BusinessPlayPackage;
@@ -26,7 +23,7 @@ interface Props {
   onVariantChange: (v: BusinessVariant) => void;
 }
 
-/* ── Micro-components ── */
+/* ── Shared micro-components (local to this file) ── */
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -44,15 +41,21 @@ function Body({ children }: { children: React.ReactNode }) {
   return <p className="text-xs text-muted-foreground leading-relaxed">{children}</p>;
 }
 
+/** Truncate text to ~charLimit and add ellipsis */
+function truncate(text: string, charLimit = 120): string {
+  if (text.length <= charLimit) return text;
+  return text.slice(0, charLimit).trimEnd() + '…';
+}
+
+/** Show more / Show less toggle for long content blocks */
 function ExpandableBody({ text, charLimit = 140 }: { text: string; charLimit?: number }) {
   const [showAll, setShowAll] = useState(false);
   const needsTruncation = text.length > charLimit;
-  const truncated = text.slice(0, charLimit).trimEnd() + '…';
 
   return (
     <div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        {showAll || !needsTruncation ? text : truncated}
+        {showAll || !needsTruncation ? text : truncate(text, charLimit)}
       </p>
       {needsTruncation && (
         <button
@@ -71,23 +74,16 @@ function ExpandableBody({ text, charLimit = 140 }: { text: string; charLimit?: n
   );
 }
 
-function CitationBadges({ citations, isGrounded }: { citations?: CitationRef[]; isGrounded: boolean }) {
-  if (!isGrounded || !citations || citations.length === 0) return null;
+/** Preview snippet shown beneath collapsed section headers */
+function SectionPreview({ text }: { text: string }) {
   return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {citations.map((c) => (
-        <span
-          key={c.id}
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/50 text-[9px] font-mono text-muted-foreground"
-        >
-          <FileText className="w-2.5 h-2.5" />
-          {c.label ?? c.id}
-        </span>
-      ))}
-    </div>
+    <p className="text-[11px] text-muted-foreground/70 leading-snug mt-1 line-clamp-2 italic">
+      {truncate(text, 160)}
+    </p>
   );
 }
 
+/** Sources modal overlay — compact citation list */
 function SourcesModal({ ids, onClose }: { ids: string[]; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
@@ -117,57 +113,46 @@ function SourcesModal({ ids, onClose }: { ids: string[]; onClose: () => void }) 
   );
 }
 
-function MECEHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="pb-1">
-      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</h4>
-      {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
-    </div>
-  );
+/* ── Sentence splitter — deterministic, no generation ── */
+// Splits text on sentence-ending punctuation; returns first `max` sentences.
+function splitSentences(text: string, max: number): string[] {
+  const matches = text.match(/[^.!?]+[.!?]+/g);
+  if (!matches) return text.trim() ? [text.trim()] : [];
+  return matches.slice(0, max).map((s) => s.trim());
 }
 
-/* ── Storyline Card ── */
-
-function StorylineCard({
-  icon,
-  title,
-  children,
-  className,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn('rounded-xl border border-border/50 bg-card p-4 space-y-2', className)}>
-      <div className="flex items-center gap-2">
-        <div className="flex-shrink-0 text-primary">{icon}</div>
-        <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">{title}</h4>
-      </div>
-      {children}
-    </div>
-  );
-}
+const PLACEHOLDER = 'Add sources to populate this section.';
 
 /* ── Main View ── */
 
 export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange }: Props) {
-  const m = pkg.mece;
+  const b = pkg.business;
   const [sourcesOpen, setSourcesOpen] = useState(false);
-  const citationCount = pkg.signal_citation_ids?.length ?? 0;
-  const isGrounded = activeVariant === 'grounded';
+  const [supportOpen, setSupportOpen] = useState(false);
+  const citationCount = b.signal_citation_ids?.length ?? 0;
 
-  // Derive plan steps as concise bullets
-  const planSteps = m.execution.plan.steps;
-  // Derive proof lines
-  const proofLines = m.economic.proof;
+  // ── Storyline card content (deterministic extraction) ──
+  // Objective: first sentence of deal_strategy.what
+  const objectiveSentences = splitSentences(b.deal_strategy.what, 1);
+  const objectiveText = objectiveSentences[0] || PLACEHOLDER;
+
+  // Point of View: first sentence of positioning.executive_pov
+  const povSentences = splitSentences(b.positioning.executive_pov, 1);
+  const povText = povSentences[0] || PLACEHOLDER;
+
+  // Plan: first 3 steps from deal_strategy.how (already an array)
+  const planBullets = b.deal_strategy.how.slice(0, 3);
+
+  // Proof: first 3 value hypotheses descriptions
+  const proofBullets = b.commercial_assets.value_hypotheses
+    .slice(0, 3)
+    .map((vh) => vh.description);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {/* Variant toggle */}
-      <div className="flex items-center justify-between">
-        {availableVariants.length > 1 && (
+      {availableVariants.length > 1 && (
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">View</span>
             <div className="inline-flex rounded-md bg-muted/50 p-0.5 border border-border/60">
@@ -187,197 +172,309 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
               ))}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* ═══════ STORYLINE CANVAS (hero) ═══════ */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Storyline</h3>
-            <p className="text-[10px] text-muted-foreground">Narrative arc for the selected play</p>
-          </div>
+          {/* Support drawer trigger */}
+          <button
+            type="button"
+            onClick={() => setSupportOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/60 bg-muted/30 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            Support ▸
+          </button>
         </div>
+      )}
 
-        {/* Full-width cards */}
-        <div className="grid gap-2">
-          <StorylineCard icon={<Target className="w-3.5 h-3.5" />} title="Objective">
-            <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.objective}</p>
-          </StorylineCard>
+      {/* ── Storyline Canvas: 4 Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Card A — Objective */}
+        <SectionCard className="sm:col-span-2">
+          <Label>Objective</Label>
+          <Body>{objectiveText}</Body>
+        </SectionCard>
 
-          <StorylineCard icon={<MessageSquare className="w-3.5 h-3.5" />} title="Point of View">
-            <p className="text-xs text-muted-foreground leading-relaxed">{m.strategic.point_of_view}</p>
-          </StorylineCard>
-        </div>
+        {/* Card B — Point of View */}
+        <SectionCard className="sm:col-span-2">
+          <Label>Point of View</Label>
+          <Body>{povText}</Body>
+        </SectionCard>
 
-        {/* Plan + Proof: 2-column on desktop, stacked on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <StorylineCard icon={<ListChecks className="w-3.5 h-3.5" />} title="Plan">
-            <ul className="space-y-1">
-              {planSteps.map((step, i) => (
+        {/* Card C — Plan */}
+        <SectionCard>
+          <Label>Plan</Label>
+          {planBullets.length > 0 ? (
+            <ul className="space-y-1.5">
+              {planBullets.map((step, i) => (
                 <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
                   <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
                   {step}
                 </li>
               ))}
             </ul>
-          </StorylineCard>
+          ) : (
+            <Body>{PLACEHOLDER}</Body>
+          )}
+        </SectionCard>
 
-          <StorylineCard icon={<ShieldCheck className="w-3.5 h-3.5" />} title="Proof">
-            {proofLines.length > 0 ? (
-              <ul className="space-y-1">
-                {proofLines.map((p, i) => (
-                  <li key={i}>
-                    <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                      {p.statement}
-                    </p>
-                    <CitationBadges citations={p.citations} isGrounded={isGrounded} />
+        {/* Card D — Proof */}
+        <SectionCard>
+          <Label>Proof</Label>
+          {proofBullets.length > 0 ? (
+            <ul className="space-y-1.5">
+              {proofBullets.map((line, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Body>{PLACEHOLDER}</Body>
+          )}
+          {citationCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setSourcesOpen(true)}
+              className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <FileText className="w-3 h-3" />
+              Sources ({citationCount})
+            </button>
+          )}
+        </SectionCard>
+      </div>
+
+      {/* ── Support Drawer (right-side overlay) ── */}
+      {supportOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={() => setSupportOpen(false)}>
+          <div
+            className="w-full max-w-lg h-full bg-background border-l border-border shadow-xl overflow-y-auto p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-foreground">Support Detail</h3>
+              <button type="button" onClick={() => setSupportOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Deal Strategy */}
+            <CollapsibleSection title="Deal Strategy" subtitle="What, How, Why" defaultOpen>
+              <div className="space-y-2.5">
+                <SectionCard>
+                  <Label>What</Label>
+                  <ExpandableBody text={b.deal_strategy.what} />
+                </SectionCard>
+                <SectionCard>
+                  <Label>How</Label>
+                  <ol className="space-y-1.5 pl-0.5">
+                    {b.deal_strategy.how.map((step, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                        <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </SectionCard>
+                <SectionCard>
+                  <Label>Why</Label>
+                  <ExpandableBody text={b.deal_strategy.why} />
+                </SectionCard>
+              </div>
+            </CollapsibleSection>
+
+            {/* Positioning */}
+            <CollapsibleSection title="Positioning" subtitle="Executive POV and stakeholder talk tracks" defaultOpen={false}>
+              <div className="space-y-2.5">
+                <SectionCard>
+                  <Label>Executive Point of View</Label>
+                  <ExpandableBody text={b.positioning.executive_pov} />
+                </SectionCard>
+                <div className="space-y-1.5">
+                  <Label>Talk Tracks</Label>
+                  {b.positioning.talk_tracks.map((tt, i) => (
+                    <SectionCard key={i}>
+                      <p className="text-[10px] font-semibold text-foreground">{tt.persona}</p>
+                      <ExpandableBody text={tt.message} />
+                    </SectionCard>
+                  ))}
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Commercial Assets */}
+            <CollapsibleSection title="Commercial Assets" subtitle="ROI prompts, value hypotheses, KPIs, sizing inputs" defaultOpen={false}>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>ROI Prompts</Label>
+                  {b.commercial_assets.roi_prompts.map((r, i) => (
+                    <SectionCard key={i}>
+                      <p className="text-[10px] font-semibold text-foreground">{r.label}</p>
+                      <ExpandableBody text={r.question} />
+                    </SectionCard>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Value Hypotheses</Label>
+                  {b.commercial_assets.value_hypotheses.map((v, i) => (
+                    <SectionCard key={i}>
+                      <p className="text-[10px] font-semibold text-foreground">{v.label}</p>
+                      <ExpandableBody text={v.description} />
+                    </SectionCard>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>KPIs</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {b.commercial_assets.kpis.map((k, i) => (
+                      <SectionCard key={i} className="p-2.5">
+                        <p className="text-[10px] font-semibold text-foreground">{k.label}</p>
+                        <p className="text-[11px] text-primary font-medium">{k.target}</p>
+                      </SectionCard>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Sizing Inputs</Label>
+                  {b.commercial_assets.sizing_inputs.map((s, i) => (
+                    <SectionCard key={i} className="p-2.5">
+                      <p className="text-[10px] font-semibold text-foreground">{s.label}</p>
+                      <Body>{s.value}</Body>
+                    </SectionCard>
+                  ))}
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Delivery Assets */}
+            <CollapsibleSection title="Delivery Assets" subtitle="Discovery agenda, workshop plan, pilot scope" defaultOpen={false}>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Discovery Agenda</Label>
+                  {b.delivery_assets.discovery_agenda.map((d, i) => (
+                    <SectionCard key={i} className="p-2.5">
+                      <p className="text-[10px] font-semibold text-foreground">{d.theme}</p>
+                      <ExpandableBody text={d.question} />
+                    </SectionCard>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Workshop Plan</Label>
+                  {b.delivery_assets.workshop_plan.map((w, i) => (
+                    <SectionCard key={i} className="p-2.5">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+                        <div>
+                          <p className="text-[10px] font-semibold text-foreground">{w.step}</p>
+                          <ExpandableBody text={w.description} />
+                        </div>
+                      </div>
+                    </SectionCard>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <Label>Pilot Scope</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <SectionCard>
+                      <p className="text-[10px] font-semibold text-foreground">In Scope</p>
+                      <ul className="space-y-1">
+                        {b.delivery_assets.pilot_scope.in_scope.map((s, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                            <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </SectionCard>
+                    <SectionCard>
+                      <p className="text-[10px] font-semibold text-foreground">Out of Scope</p>
+                      <ul className="space-y-1">
+                        {b.delivery_assets.pilot_scope.out_of_scope.map((s, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                            <span className="text-destructive/40 mt-0.5 flex-shrink-0 text-[10px]">-</span> {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </SectionCard>
+                    <SectionCard>
+                      <p className="text-[10px] font-semibold text-foreground">Deliverables</p>
+                      <ul className="space-y-1">
+                        {b.delivery_assets.pilot_scope.deliverables.map((d, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                            <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {d}
+                          </li>
+                        ))}
+                      </ul>
+                    </SectionCard>
+                    <SectionCard>
+                      <p className="text-[10px] font-semibold text-foreground">Stakeholders</p>
+                      <ul className="space-y-1">
+                        {b.delivery_assets.pilot_scope.stakeholders.map((s, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                            <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </SectionCard>
+                  </div>
+                </div>
+              </div>
+            </CollapsibleSection>
+
+            {/* Enablement */}
+            <CollapsibleSection title="Enablement" subtitle="Seller and engineer preparation" defaultOpen={false}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <SectionCard>
+                  <Label>Seller</Label>
+                  <ul className="space-y-1.5">
+                    {b.enablement.seller.map((s, i) => (
+                      <li key={i} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </SectionCard>
+                <SectionCard>
+                  <Label>Engineer</Label>
+                  <ul className="space-y-1.5">
+                    {b.enablement.engineer.map((s, i) => (
+                      <li key={i} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </SectionCard>
+              </div>
+            </CollapsibleSection>
+
+            {/* Open Questions */}
+            <CollapsibleSection title="Open Questions" subtitle="Items to validate before advancing" defaultOpen={false}>
+              <ul className="space-y-1.5">
+                {b.open_questions.map((q, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                    <HelpCircle className="w-3 h-3 text-muted-foreground/50 mt-0.5 flex-shrink-0" />
+                    {q}
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-[11px] text-muted-foreground italic">No proof evidence available.</p>
-            )}
+            </CollapsibleSection>
+
+            {/* Sources button inside drawer */}
             {citationCount > 0 && (
               <button
                 type="button"
                 onClick={() => setSourcesOpen(true)}
-                className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 <FileText className="w-3 h-3" />
                 Sources ({citationCount})
               </button>
             )}
-          </StorylineCard>
+          </div>
         </div>
-      </div>
-
-      {/* ═══════ SECONDARY SECTIONS (progressive disclosure) ═══════ */}
-      <div className="space-y-2 pt-2 border-t border-border/30">
-
-        {/* Economic */}
-        <CollapsibleSection title="Economic" subtitle="Value hypothesis, KPIs, and proof" defaultOpen={false} variant="secondary">
-          <div className="space-y-2">
-            <SectionCard>
-              <Label>Value Hypothesis</Label>
-              <ExpandableBody text={m.economic.value_hypothesis} />
-            </SectionCard>
-            <SectionCard>
-              <Label>KPIs</Label>
-              <ul className="space-y-1">
-                {m.economic.kpis.map((kpi, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
-                    <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                    {kpi}
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
-            {m.economic.proof.length > 0 && (
-              <SectionCard>
-                <Label>Proof</Label>
-                <ul className="space-y-2">
-                  {m.economic.proof.map((p, i) => (
-                    <li key={i}>
-                      <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
-                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                        {p.statement}
-                      </p>
-                      <CitationBadges citations={p.citations} isGrounded={isGrounded} />
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-          </div>
-        </CollapsibleSection>
-
-        {/* Execution */}
-        <CollapsibleSection title="Execution" subtitle="Plan steps and delivery scope" defaultOpen={false} variant="secondary">
-          <div className="space-y-2">
-            <SectionCard>
-              <Label>Plan</Label>
-              <ul className="space-y-1.5">
-                {m.execution.plan.steps.map((step, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
-                    <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            </SectionCard>
-            {m.execution.delivery.length > 0 && (
-              <div className="space-y-1.5">
-                {m.execution.delivery.map((d, i) => (
-                  <SectionCard key={i} className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">{d.title}</p>
-                    {d.body && <Body>{d.body}</Body>}
-                    <CitationBadges citations={d.citations} isGrounded={isGrounded} />
-                  </SectionCard>
-                ))}
-              </div>
-            )}
-          </div>
-        </CollapsibleSection>
-
-        {/* Advancement */}
-        <CollapsibleSection title="Advancement" subtitle="Required info and objection handling" defaultOpen={false} variant="secondary">
-          <div className="space-y-2">
-            {m.advancement.required_info_from_customer.length > 0 && (
-              <SectionCard>
-                <Label>Required info from customer</Label>
-                <ul className="space-y-1.5">
-                  {m.advancement.required_info_from_customer.map((q, i) => (
-                    <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground leading-relaxed">
-                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                      {q}
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-            {m.advancement.objections.length > 0 && (
-              <SectionCard>
-                <Label>Objections</Label>
-                <ul className="space-y-2">
-                  {m.advancement.objections.map((obj, i) => (
-                    <li key={i}>
-                      <p className="text-xs text-foreground font-medium">{obj.objection}</p>
-                      {obj.mitigation && <p className="text-xs text-muted-foreground mt-0.5">{obj.mitigation}</p>}
-                      <CitationBadges citations={obj.citations} isGrounded={isGrounded} />
-                    </li>
-                  ))}
-                </ul>
-              </SectionCard>
-            )}
-          </div>
-        </CollapsibleSection>
-
-        {/* Strategic Breakdown — appendix, collapsed by default */}
-        <CollapsibleSection title="Strategic Breakdown (Support)" subtitle="Objective and point of view detail" defaultOpen={false} variant="secondary">
-          <div className="space-y-2">
-            <SectionCard>
-              <Label>Objective</Label>
-              <ExpandableBody text={m.strategic.objective} />
-            </SectionCard>
-            <SectionCard>
-              <Label>Point of View</Label>
-              <ExpandableBody text={m.strategic.point_of_view} />
-            </SectionCard>
-            {m.strategic.context && (
-              <SectionCard>
-                <Label>Context</Label>
-                <Body>{m.strategic.context}</Body>
-              </SectionCard>
-            )}
-          </div>
-        </CollapsibleSection>
-      </div>
+      )}
 
       {/* Sources modal */}
-      {sourcesOpen && pkg.signal_citation_ids && pkg.signal_citation_ids.length > 0 && (
-        <SourcesModal ids={pkg.signal_citation_ids} onClose={() => setSourcesOpen(false)} />
+      {sourcesOpen && b.signal_citation_ids && b.signal_citation_ids.length > 0 && (
+        <SourcesModal ids={b.signal_citation_ids} onClose={() => setSourcesOpen(false)} />
       )}
     </div>
   );

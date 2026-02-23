@@ -1,64 +1,80 @@
-// BusinessPlayPackage Store — MECE schema for Deal Planning
+// BusinessPlayPackage Store — materialized Composer outputs for Deal Planning Business tab
 // In-memory singleton. Partner-only. No mutations to other stores.
 
 export type BusinessVariant = 'executive' | 'grounded';
 
-// ============= Citation Reference =============
-
-export interface CitationRef {
-  id: string;
-  label?: string;
+export interface TalkTrack {
+  persona: string;
+  message: string;
 }
 
-// ============= MECE Blocks =============
-
-export interface MECEStrategic {
-  objective: string;
-  point_of_view: string;
-  context?: string;
+export interface ValueHypothesis {
+  label: string;
+  description: string;
 }
 
-export interface MECEProofItem {
-  statement: string;
-  citations?: CitationRef[];
+export interface KPI {
+  label: string;
+  target: string;
 }
 
-export interface MECEEconomic {
-  value_hypothesis: string;
-  kpis: string[];
-  proof: MECEProofItem[];
+export interface SizingInput {
+  label: string;
+  value: string;
 }
 
-export interface MECEDeliveryItem {
-  title: string;
-  body?: string;
-  citations?: CitationRef[];
+export interface ROIPrompt {
+  label: string;
+  question: string;
 }
 
-export interface MECEExecution {
-  plan: { steps: string[] };
-  delivery: MECEDeliveryItem[];
+export interface DiscoveryQuestion {
+  theme: string;
+  question: string;
 }
 
-export interface MECEObjection {
-  objection: string;
-  mitigation?: string;
-  citations?: CitationRef[];
+export interface WorkshopStep {
+  step: string;
+  description: string;
 }
 
-export interface MECEAdvancement {
-  required_info_from_customer: string[];
-  objections: MECEObjection[];
+export interface PilotScope {
+  in_scope: string[];
+  out_of_scope: string[];
+  deliverables: string[];
+  stakeholders: string[];
 }
 
-export interface MECEBlock {
-  strategic: MECEStrategic;
-  economic: MECEEconomic;
-  execution: MECEExecution;
-  advancement: MECEAdvancement;
+export interface EnablementBlock {
+  seller: string[];
+  engineer: string[];
 }
 
-// ============= Package =============
+export interface BusinessBlock {
+  signal_citation_ids?: string[];
+  deal_strategy: {
+    what: string;
+    how: string[];
+    why: string;
+  };
+  positioning: {
+    executive_pov: string;
+    talk_tracks: TalkTrack[];
+  };
+  commercial_assets: {
+    roi_prompts: ROIPrompt[];
+    value_hypotheses: ValueHypothesis[];
+    kpis: KPI[];
+    sizing_inputs: SizingInput[];
+  };
+  delivery_assets: {
+    discovery_agenda: DiscoveryQuestion[];
+    workshop_plan: WorkshopStep[];
+    pilot_scope: PilotScope;
+  };
+  enablement: EnablementBlock;
+  open_questions: string[];
+}
 
 export interface BusinessPlayPackage {
   variant: BusinessVariant;
@@ -67,8 +83,7 @@ export interface BusinessPlayPackage {
   type: string;
   motion: string;
   title: string;
-  signal_citation_ids?: string[];
-  mece: MECEBlock;
+  business: BusinessBlock;
   created_at: string;
 }
 

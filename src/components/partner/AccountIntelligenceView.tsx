@@ -22,6 +22,9 @@ import {
   ChevronRight,
   BookOpen,
   Plus,
+  Upload,
+  Link2,
+  X,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -29,6 +32,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { resolveAccountIntelligence } from '@/services/accountIntelligence';
@@ -38,11 +49,11 @@ import {
   makeInboxItemId,
   deriveImpactArea,
 } from '@/data/partner/dealPlanningInboxStore';
+import { addMemoryItem } from '@/data/partner/accountMemoryStore';
 import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
 
 interface AccountIntelligenceViewProps {
   focusId: string | null;
-  onGoToDealPlanning?: () => void;
 }
 
 /* ─── Shared small helpers ─── */
@@ -323,7 +334,7 @@ function ExpandableRow({
 
 /* ─── Main View ─── */
 
-export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: AccountIntelligenceViewProps) {
+export function AccountIntelligenceView({ focusId }: AccountIntelligenceViewProps) {
   const vm = useMemo<AccountIntelligenceVM | null>(() => {
     if (!focusId) return null;
     return resolveAccountIntelligence({ focusId, weekOf: '2026-02-10' });
@@ -338,6 +349,12 @@ export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: Account
   
   const [expandedInitiative, setExpandedInitiative] = useState<string | null>(null);
   const [expandedTrend, setExpandedTrend] = useState<string | null>(null);
+
+  // Add Evidence dialog state
+  const [addEvidenceOpen, setAddEvidenceOpen] = useState(false);
+  const [addEvidenceMode, setAddEvidenceMode] = useState<'upload' | 'paste' | 'link'>('paste');
+  const [pasteText, setPasteText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
@@ -463,26 +480,16 @@ export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: Account
             <ReadinessCompact score={readiness.score} />
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {onGoToDealPlanning && focusId && (
+            {focusId && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => {
-                        setDealPlanTrigger({
-                          signalId: '',
-                          customer: focusId,
-                          signalTitle: '',
-                          focusId,
-                          entry: 'add_account_intelligence',
-                          openEvidence: true,
-                        });
-                        onGoToDealPlanning();
-                      }}
+                      onClick={() => setAddEvidenceOpen(true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-background hover:border-primary/30 hover:text-primary transition-colors"
                     >
                       <Plus className="w-3 h-3" />
-                      Add account intelligence
+                      Add evidence
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-[260px] text-xs leading-relaxed">
@@ -833,7 +840,7 @@ export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: Account
                             trendId: t.id,
                             trendTitle: t.trend_title,
                           });
-                          onGoToDealPlanning?.();
+                          // Navigation to Deal Planning handled by tab click
                         }}
                         className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-primary hover:text-primary-foreground hover:bg-primary border border-primary/20 hover:border-primary transition-colors flex-shrink-0"
                       >
@@ -1194,6 +1201,88 @@ export function AccountIntelligenceView({ focusId, onGoToDealPlanning }: Account
           )}
         </DocSection>
       </div>
+      {/* ─── ADD EVIDENCE DIALOG ─── */}
+      <Dialog open={addEvidenceOpen} onOpenChange={(open) => { if (!open) { setAddEvidenceOpen(false); setAddEvidenceMode('paste'); setPasteText(''); setLinkUrl(''); } else { setAddEvidenceOpen(true); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Add evidence</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {/* Mode tabs */}
+            <div className="flex items-center gap-1">
+              {([
+                { key: 'upload' as const, icon: <Upload className="w-3 h-3" />, label: 'Upload' },
+                { key: 'paste' as const, icon: <FileText className="w-3 h-3" />, label: 'Paste text' },
+                { key: 'link' as const, icon: <Link2 className="w-3 h-3" />, label: 'Add link' },
+              ]).map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setAddEvidenceMode(t.key)}
+                  className={cn(
+                    'flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium transition-all',
+                    addEvidenceMode === t.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  )}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+
+            {addEvidenceMode === 'upload' && (
+              <div className="rounded border border-dashed border-border/60 bg-muted/10 p-6 text-center">
+                <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
+                <p className="text-[11px] text-muted-foreground">File upload (simulated in demo)</p>
+                <button
+                  onClick={() => {
+                    addMemoryItem({ account_id: focusId!, type: 'other', title: `Uploaded file — ${new Date().toLocaleDateString()}` });
+                    toast.success('Evidence added');
+                    setAddEvidenceOpen(false); setAddEvidenceMode('paste');
+                  }}
+                  className="mt-2 text-[11px] font-medium text-primary hover:text-primary/80"
+                >
+                  Simulate upload
+                </button>
+              </div>
+            )}
+
+            {addEvidenceMode === 'paste' && (
+              <div className="space-y-2">
+                <Textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Paste notes, transcript, or context…" className="text-xs min-h-[80px]" />
+                <button
+                  disabled={!pasteText.trim()}
+                  onClick={() => {
+                    addMemoryItem({ account_id: focusId!, type: 'transcript_notes', title: pasteText.trim().slice(0, 60) || 'Pasted notes', content_text: pasteText.trim() });
+                    setPasteText(''); toast.success('Evidence added');
+                    setAddEvidenceOpen(false); setAddEvidenceMode('paste');
+                  }}
+                  className={cn('h-8 px-4 rounded text-[11px] font-medium transition-colors', pasteText.trim() ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed')}
+                >
+                  Save
+                </button>
+              </div>
+            )}
+
+            {addEvidenceMode === 'link' && (
+              <div className="space-y-2">
+                <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" className="text-xs h-9" />
+                <button
+                  disabled={!linkUrl.trim()}
+                  onClick={() => {
+                    addMemoryItem({ account_id: focusId!, type: 'link', title: linkUrl.trim().slice(0, 80), url: linkUrl.trim() });
+                    setLinkUrl(''); toast.success('Evidence added');
+                    setAddEvidenceOpen(false); setAddEvidenceMode('paste');
+                  }}
+                  className={cn('h-8 px-4 rounded text-[11px] font-medium transition-colors', linkUrl.trim() ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed')}
+                >
+                  Save
+                </button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

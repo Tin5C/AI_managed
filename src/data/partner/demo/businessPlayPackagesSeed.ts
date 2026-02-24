@@ -280,7 +280,264 @@ function buildPackages(): BusinessPlayPackage[] {
     },
   };
 
-  return [EXECUTIVE, GROUNDED];
+  // ---------- play_governance — Executive ----------
+
+  const GOV_EXECUTIVE: BusinessPlayPackage = {
+    variant: 'executive',
+    focus_id: 'schindler',
+    play_id: 'play_governance',
+    type: 'New Logo',
+    motion: 'Strategic Pursuit',
+    title: 'AI Governance for Scalable Deployment — Executive',
+    created_at: '2026-02-19T10:00:00+01:00',
+    business: {
+      signal_citation_ids: validateCitations([
+        'sig-sch-ai-governance',
+        'sig-sch-azure-swiss',
+        'sig-sch-eu-machinery',
+      ]),
+      deal_strategy: {
+        what: `Position ${pn} as the AI governance partner that enables Schindler to scale AI workloads with confidence — embedding policy, risk controls, and compliance gating into every deployment.`,
+        how: [
+          'Lead with a governance maturity assessment benchmarked against ISO 42001 and the EU AI Act.',
+          'Map Schindler\'s existing RACI model to an AI-specific policy framework with automated guardrails.',
+          'Propose a governance-as-code layer on Azure Swiss North to enforce data-residency and model-access controls.',
+          'Use pilot governance gates to demonstrate audit-readiness before enterprise AI rollout.',
+        ],
+        why: `The EU AI Act compliance deadline and 2027 Machinery Regulation create board-level urgency for structured AI governance. Schindler\u2019s 24/7 SOC and RACI culture signal readiness \u2014 they need a framework, not a cultural shift. ${pn} delivers governance-as-code that accelerates AI deployment rather than blocking it.`,
+      },
+      positioning: {
+        executive_pov: `Schindler doesn't have a governance problem \u2014 they have a scaling problem. Without a repeatable AI governance framework, every new use case requires a bespoke compliance review. ${pn} delivers a reusable governance layer that turns weeks of approval into days, unlocking AI velocity across the enterprise.`,
+        talk_tracks: [
+          { persona: 'CIO / VP Engineering', message: 'We embed governance into your Azure platform so every AI workload deploys with policy controls pre-applied — no separate review cycle, no deployment delays.' },
+          { persona: 'CFO / Finance', message: 'Each bespoke AI compliance review costs CHF 50-80K and takes 4-6 weeks. Our governance framework reduces that to under a week per workload — the ROI compounds with every use case you scale.' },
+          { persona: 'CISO', message: 'Our framework aligns to ISO 42001 and the EU AI Act out of the box. Policy enforcement is automated through Azure Policy and Defender — your SOC team monitors AI workloads the same way they monitor infrastructure.' },
+          { persona: 'Procurement', message: 'The governance assessment is a fixed-fee 3-week engagement. The framework deployment is milestone-gated with clear deliverables — you approve each phase before the next begins.' },
+        ],
+      },
+      commercial_assets: {
+        roi_prompts: [
+          { label: 'Compliance review cost', question: 'What is the average cost and duration of a compliance review for a new AI workload today?' },
+          { label: 'AI pipeline backlog', question: 'How many AI use cases are currently waiting for governance approval before deployment?' },
+          { label: 'Regulatory exposure', question: 'What is your current readiness level for EU AI Act and Machinery Regulation compliance?' },
+        ],
+        value_hypotheses: [
+          { label: 'Governance cycle reduction', description: 'Reduce AI workload approval time from 4-6 weeks to under 1 week through automated policy enforcement.' },
+          { label: 'Compliance cost savings', description: 'Eliminate CHF 50-80K per bespoke review by deploying a reusable governance framework across all AI workloads.' },
+          { label: 'Regulatory readiness', description: 'Achieve EU AI Act and ISO 42001 audit-readiness within 90 days, ahead of enforcement deadlines.' },
+        ],
+        kpis: [
+          { label: 'Governance approval cycle', target: '<5 business days per AI workload' },
+          { label: 'Policy coverage', target: '100% of production AI workloads under automated governance' },
+          { label: 'Compliance audit readiness', target: 'ISO 42001 self-assessment complete within 90 days' },
+          { label: 'Cost per review', target: '>60% reduction vs. current bespoke process' },
+        ],
+        sizing_inputs: [
+          { label: 'AI workloads in production', value: 'Count of deployed models/agents requiring governance' },
+          { label: 'Planned AI use cases (12-month pipeline)', value: 'Volume to size framework scalability' },
+          { label: 'Current compliance team headcount', value: 'Baseline for efficiency gain calculation' },
+          { label: 'Azure subscriptions hosting AI', value: 'Scope for policy-as-code deployment' },
+        ],
+      },
+      delivery_assets: {
+        discovery_agenda: [
+          { theme: 'Governance maturity', question: 'Describe your current AI governance model — is it centralised, federated, or ad hoc?' },
+          { theme: 'Policy enforcement', question: 'How are AI-specific policies enforced today — manual review, Azure Policy, or other tooling?' },
+          { theme: 'Regulatory landscape', question: 'What is your current assessment of EU AI Act impact on your product and operations portfolio?' },
+          { theme: 'Risk classification', question: 'Do you classify AI workloads by risk tier? If so, what criteria are used?' },
+          { theme: 'Audit trail', question: 'How do you currently document model decisions, data lineage, and access controls for audit purposes?' },
+          { theme: 'Scaling blockers', question: 'What are the top 3 reasons AI use cases stall between pilot and production today?' },
+        ],
+        workshop_plan: [
+          { step: 'Governance maturity assessment', description: 'Benchmark current AI governance against ISO 42001 and EU AI Act requirements.' },
+          { step: 'Risk classification framework', description: 'Define workload risk tiers and map existing AI use cases to appropriate governance levels.' },
+          { step: 'Policy-as-code design', description: 'Design Azure Policy rules for automated enforcement of data residency, model access, and audit logging.' },
+          { step: 'Approval workflow blueprint', description: 'Redesign approval process with automated gates, reducing manual review to exception-only.' },
+          { step: 'Pilot governance deployment', description: 'Apply framework to 2-3 existing AI workloads as proof of concept.' },
+        ],
+        pilot_scope: {
+          in_scope: [
+            'Governance maturity assessment (ISO 42001 + EU AI Act)',
+            'Risk classification framework for AI workloads',
+            'Azure Policy-as-code deployment for 2-3 pilot workloads',
+            'Automated approval workflow for standard-risk AI use cases',
+          ],
+          out_of_scope: [
+            'AI model development or retraining',
+            'Enterprise-wide policy rollout beyond pilot workloads',
+            'Non-Azure cloud governance',
+            'Legal interpretation of regulatory requirements',
+          ],
+          deliverables: [
+            'AI governance maturity assessment report with gap analysis',
+            'Risk classification framework document',
+            'Azure Policy-as-code package deployed to pilot subscriptions',
+            'Approval workflow design with SLA targets',
+            'Roadmap for enterprise-wide governance rollout',
+          ],
+          stakeholders: [
+            'CISO (executive sponsor)',
+            'VP Engineering (AI workload owner)',
+            'Head of Compliance (regulatory gate)',
+            'Head of Procurement (commercial gate)',
+          ],
+        },
+      },
+      enablement: {
+        seller: [
+          'Lead with the scaling bottleneck — governance is an accelerator, not a blocker.',
+          'Quote EU AI Act and Machinery Regulation deadlines to create urgency.',
+          'Position the framework as reusable across every future AI use case — compound ROI.',
+          'Reference Schindler\'s existing RACI culture as a strength — the framework extends it, not replaces it.',
+        ],
+        engineer: [
+          'Prepare an Azure Policy demo showing automated enforcement of data-residency and model-access rules.',
+          'Know the ISO 42001 control structure — map it to Azure Defender and Purview capabilities.',
+          'Have a reference architecture for governance-as-code on Azure Swiss North ready.',
+        ],
+      },
+      open_questions: [
+        'Does Schindler have a formal AI ethics board or governance committee?',
+        'How many AI workloads are currently in production vs. pilot vs. backlog?',
+        'Has the CISO evaluated ISO 42001 certification as a strategic objective?',
+        'What is the internal timeline for EU AI Act compliance readiness?',
+        'Are there existing Azure Policy deployments we can extend rather than replace?',
+      ],
+    },
+  };
+
+  // ---------- play_governance — Grounded ----------
+
+  const GOV_GROUNDED: BusinessPlayPackage = {
+    variant: 'grounded',
+    focus_id: 'schindler',
+    play_id: 'play_governance',
+    type: 'New Logo',
+    motion: 'Strategic Pursuit',
+    title: 'AI Governance for Scalable Deployment — Grounded',
+    created_at: '2026-02-19T10:00:00+01:00',
+    business: {
+      signal_citation_ids: validateCitations([
+        'sig-sch-ai-governance',
+        'sig-sch-azure-swiss',
+        'sig-sch-eu-machinery',
+      ]),
+      deal_strategy: {
+        what: `Engage Schindler through a governance maturity assessment that maps their existing RACI model and 24/7 SOC capabilities to an AI-specific policy framework, removing the approval bottleneck that prevents scaling beyond pilot.`,
+        how: [
+          'Reference their published RACI-based access-control model as the foundation — extend it, don\'t replace it.',
+          'Use the 24/7 SOC programme as evidence they already invest in operational controls — governance-as-code is the natural next layer.',
+          'Map the EU Machinery Regulation 2027 deadline to specific AI workloads in their field-service and elevator operations.',
+          'Propose a 3-week governance assessment with a concrete deliverable: risk-classified workload inventory with automated approval paths.',
+        ],
+        why: `Schindler\u2019s 24/7 SOC and RACI model demonstrate governance maturity in infrastructure \u2014 but AI workloads are still approved ad hoc. Each new use case takes 4-6 weeks of bespoke review, creating a backlog that delays AI value realisation. ${pn} bridges this gap with a governance framework grounded in Schindler\u2019s existing controls and deployed on Azure Swiss North.`,
+      },
+      positioning: {
+        executive_pov: `Schindler\u2019s security-first culture is an asset, not a constraint. The challenge is extending that culture to AI workloads without creating a bottleneck. ${pn} delivers a governance framework that embeds AI policy enforcement into the same Azure infrastructure your SOC already monitors \u2014 scaling AI becomes an operational process, not a project.`,
+        talk_tracks: [
+          { persona: 'CIO / VP Engineering', message: 'Your RACI model works for infrastructure. We extend it to AI workloads — same governance culture, new policy layer, automated enforcement. No new committee, no new process.' },
+          { persona: 'CFO / Finance', message: 'Every AI use case stuck in governance review is deferred value. Our framework processes standard-risk workloads in under a week — at a fraction of the CHF 50-80K you spend on each bespoke review today.' },
+          { persona: 'CISO', message: 'We build on your 24/7 SOC and existing Azure Defender deployment. AI governance policies are enforced through Azure Policy — your team monitors them through the same console, same alerting, same RACI.' },
+          { persona: 'Procurement', message: 'The governance assessment is a 3-week fixed-fee engagement with a documented deliverable: your AI workload risk classification and automated approval workflow design. Go/no-go for framework deployment is yours.' },
+        ],
+      },
+      commercial_assets: {
+        roi_prompts: [
+          { label: 'Approval backlog', question: 'How many AI use cases are currently pending governance approval, and what is the estimated business value deferred?' },
+          { label: 'Review cost per workload', question: 'What does a typical bespoke AI compliance review cost in internal hours and external advisory fees?' },
+          { label: 'SOC monitoring scope', question: 'Does your 24/7 SOC currently monitor AI-specific workloads, or only infrastructure and identity?' },
+        ],
+        value_hypotheses: [
+          { label: 'Approval velocity (grounded)', description: 'Reduce AI workload approval from 4-6 weeks to under 5 business days by automating standard-risk classification and policy enforcement.' },
+          { label: 'Review cost elimination', description: 'Replace CHF 50-80K bespoke reviews with a reusable framework — marginal cost per additional workload approaches zero.' },
+          { label: 'SOC integration efficiency', description: 'Add AI workload governance to existing SOC monitoring at minimal incremental cost — no new tooling, no new team.' },
+        ],
+        kpis: [
+          { label: 'Governance approval cycle', target: '<5 business days for standard-risk AI workloads' },
+          { label: 'Policy automation coverage', target: '100% of pilot AI workloads under Azure Policy enforcement' },
+          { label: 'Regulatory gap closure', target: 'EU AI Act gap assessment complete within 3 weeks' },
+          { label: 'Cost per governance review', target: '>60% reduction vs. current bespoke process' },
+          { label: 'SOC AI monitoring', target: 'AI workloads visible in existing SOC dashboard within pilot' },
+        ],
+        sizing_inputs: [
+          { label: 'AI workloads pending approval', value: 'Backlog count to quantify deferred value' },
+          { label: 'Current review cost per workload', value: 'Internal + external hours for baseline ROI' },
+          { label: 'SOC alert volume', value: 'Current infrastructure alert baseline to size AI monitoring overhead' },
+          { label: 'Azure Policy deployment scope', value: 'Subscriptions and resource groups for pilot targeting' },
+        ],
+      },
+      delivery_assets: {
+        discovery_agenda: [
+          { theme: 'RACI model', question: 'Walk us through how your RACI model applies to a new cloud workload deployment today — who approves, who reviews, who is informed?' },
+          { theme: 'SOC coverage', question: 'What does your 24/7 SOC monitor today — infrastructure only, or does it include application-layer and data-access events?' },
+          { theme: 'AI workload inventory', question: 'How many AI models or agents are in production? How many are in pilot or backlog waiting for approval?' },
+          { theme: 'Policy tooling', question: 'Are you using Azure Policy, Defender for Cloud, or Purview today? If so, what policy sets are deployed?' },
+          { theme: 'Regulatory mapping', question: 'Has your compliance team mapped EU AI Act risk categories to your current AI workload portfolio?' },
+          { theme: 'Governance bottleneck', question: 'What is the single biggest reason an AI use case stalls between pilot and production approval?' },
+          { theme: 'Audit requirements', question: 'What evidence does your internal or external auditor require for AI workload compliance sign-off?' },
+        ],
+        workshop_plan: [
+          { step: 'RACI-to-AI mapping', description: 'Extend the existing RACI model to cover AI-specific roles: model owner, data steward, risk assessor, deployment approver.' },
+          { step: 'Workload risk classification', description: 'Classify current and planned AI workloads into risk tiers using EU AI Act criteria and Schindler-specific operational risk factors.' },
+          { step: 'Policy-as-code design (SOC-aligned)', description: 'Design Azure Policy rules that integrate with existing SOC alerting — AI governance events flow to the same console.' },
+          { step: 'Approval workflow optimisation', description: 'Redesign the approval process: automated fast-track for standard-risk, manual deep-review only for high-risk workloads.' },
+          { step: 'Pilot deployment and SOC integration', description: 'Deploy governance framework on 2-3 AI workloads; validate SOC monitoring integration and approval cycle time.' },
+          { step: 'Scaling roadmap', description: 'Document framework extension plan for remaining AI workloads with effort estimates and dependency mapping.' },
+        ],
+        pilot_scope: {
+          in_scope: [
+            'Governance maturity assessment mapped to Schindler RACI model',
+            'EU AI Act risk classification for current AI workload portfolio',
+            'Azure Policy-as-code deployment for 2-3 pilot AI workloads',
+            'SOC monitoring integration for AI governance events',
+            'Automated approval workflow for standard-risk workloads',
+          ],
+          out_of_scope: [
+            'AI model development, retraining, or performance tuning',
+            'SOC re-architecture or tooling replacement',
+            'Non-Azure cloud governance',
+            'Legal advisory on regulatory interpretation',
+            'Enterprise-wide rollout beyond pilot scope',
+          ],
+          deliverables: [
+            'Governance maturity assessment with RACI-mapped gap analysis',
+            'AI workload risk classification inventory (EU AI Act aligned)',
+            'Azure Policy-as-code package deployed and SOC-integrated',
+            'Optimised approval workflow with measured cycle-time improvement',
+            'Enterprise scaling roadmap with effort estimates',
+          ],
+          stakeholders: [
+            'CISO (executive sponsor, SOC owner)',
+            'VP Engineering (AI workload portfolio owner)',
+            'Head of Compliance (EU AI Act regulatory gate)',
+            'Head of Procurement (commercial and contract gate)',
+          ],
+        },
+      },
+      enablement: {
+        seller: [
+          'Reference the RACI model and 24/7 SOC by name — it signals account-level research and builds credibility.',
+          'Frame governance as an accelerator: "Your security culture is an asset — we help you extend it to AI without slowing down."',
+          'Use the EU AI Act 2025/2027 deadlines and Machinery Regulation as urgency drivers.',
+          'Position the 3-week assessment as low-risk, high-signal: fixed fee, concrete deliverable, go/no-go gate.',
+        ],
+        engineer: [
+          'Review Schindler\'s published SOC and compliance documentation before discovery.',
+          'Prepare a demo showing Azure Policy enforcement for AI workloads with SOC alert integration.',
+          'Know the ISO 42001 control mapping to Azure Defender and Purview — be ready to walk through it.',
+        ],
+      },
+      open_questions: [
+        'Has the CISO or compliance team formally evaluated ISO 42001 as a certification target?',
+        'Are AI workload approvals currently managed through the same RACI process as infrastructure, or a separate path?',
+        'Does the 24/7 SOC have capacity to absorb AI-specific governance alerting without additional headcount?',
+        'Has Schindler engaged external advisory on EU AI Act classification for their elevator/escalator products?',
+        'What is the internal appetite for governance-as-code vs. manual policy enforcement?',
+      ],
+    },
+  };
+
+  return [EXECUTIVE, GROUNDED, GOV_EXECUTIVE, GOV_GROUNDED];
 }
 
 seedBusinessPlayPackages(buildPackages());

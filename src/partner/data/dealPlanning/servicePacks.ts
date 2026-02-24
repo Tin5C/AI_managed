@@ -84,4 +84,13 @@ export const PLAY_SERVICE_PACKS: PlayServicePack[] = [
     prerequisites: ['Competitive landscape intel', 'Technical champion'],
     effort: 'M',
   },
+  {
+    id: 'play_governance',
+    name: 'AI Governance for Scalable Deployment',
+    tags: ['ai_governance', 'security_identity', 'compliance', 'ai_readiness'],
+    bias: null,
+    motionFit: ['Strategic Pursuit', 'Compliance Upgrade', 'RFP/Tender', 'Expansion'],
+    prerequisites: ['CISO or compliance sponsor', 'Existing AI or cloud workloads'],
+    effort: 'M',
+  },
 ];

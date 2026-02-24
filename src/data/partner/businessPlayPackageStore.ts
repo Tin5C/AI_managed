@@ -50,6 +50,21 @@ export interface EnablementBlock {
   engineer: string[];
 }
 
+export interface LAERBlock {
+  listen: string;
+  acknowledge: string;
+  explore: string[];
+  respond: string[];
+}
+
+export interface BusinessObjection {
+  title: string;
+  preview?: string;
+  laer: LAERBlock;
+  proof_anchors?: string[];
+  aligned_driver_ids?: string[];
+}
+
 export interface BusinessBlock {
   signal_citation_ids?: string[];
   deal_strategy: {
@@ -73,6 +88,7 @@ export interface BusinessBlock {
     pilot_scope: PilotScope;
   };
   enablement: EnablementBlock;
+  objection_handling?: { objections: BusinessObjection[] };
   open_questions: string[];
 }
 

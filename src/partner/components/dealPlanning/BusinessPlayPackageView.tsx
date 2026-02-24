@@ -128,7 +128,251 @@ function splitSentences(text: string, max: number): string[] {
 
 const PLACEHOLDER = 'Add sources to populate this section.';
 
-/* ── Main View ── */
+/* ── Persona chip labels for Stakeholders & messaging ── */
+const PERSONA_MAP: Record<string, string> = {
+  cio: 'CIO / VP Engineering',
+  cfo: 'CFO / Finance',
+  ciso: 'CISO',
+  procurement: 'Procurement',
+};
+
+function classifyPersona(persona: string): string {
+  const p = persona.toLowerCase();
+  if (p.includes('cio') || p.includes('vp') || p.includes('engineering') || p.includes('cto') || p.includes('head of tech')) return 'cio';
+  if (p.includes('cfo') || p.includes('finance') || p.includes('controller')) return 'cfo';
+  if (p.includes('ciso') || p.includes('security') || p.includes('risk') || p.includes('compliance')) return 'ciso';
+  return 'procurement';
+}
+
+interface TalkTrackItem { persona: string; message: string; }
+interface DiscoveryItem { theme: string; question: string; }
+
+function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[] }) {
+  // Group talk tracks by classified persona
+  const grouped = talkTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
+    const key = classifyPersona(tt.persona);
+    (acc[key] ??= []).push(tt);
+    return acc;
+  }, {});
+
+  const personaKeys = Object.keys(PERSONA_MAP).filter((k) => grouped[k]?.length);
+  const [activePersona, setActivePersona] = useState(personaKeys[0] ?? '');
+  const [showDiscovery, setShowDiscovery] = useState(false);
+  const [showChallenger, setShowChallenger] = useState(false);
+
+  if (personaKeys.length === 0) {
+    return (
+      <CollapsibleSection title="Stakeholders & messaging" subtitle="Talk tracks by persona" defaultOpen>
+        <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+      </CollapsibleSection>
+    );
+  }
+
+  const tracks = grouped[activePersona] ?? [];
+  // Use first matching discovery question as challenger question (deterministic)
+  const challengerQ = discoveryAgenda.length > 0 ? discoveryAgenda[0].question : null;
+
+  return (
+    <CollapsibleSection title="Stakeholders & messaging" subtitle="Talk tracks by persona" defaultOpen>
+      <div className="space-y-2">
+        {/* Persona chips */}
+        <div className="flex flex-wrap gap-1.5">
+          {personaKeys.map((key) => (
+            <button
+              key={key}
+              onClick={() => { setActivePersona(key); setShowDiscovery(false); setShowChallenger(false); }}
+              className={cn(
+                'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border',
+                activePersona === key
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-muted/30 text-muted-foreground border-border/60 hover:bg-muted/50',
+              )}
+            >
+              {PERSONA_MAP[key]}
+            </button>
+          ))}
+        </div>
+
+        {/* Active persona card */}
+        <SectionCard className="p-2.5">
+          <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5 pb-1.5 border-b border-border/30 mb-1.5">
+            <Users className="w-3 h-3 text-primary/50" />
+            {PERSONA_MAP[activePersona]}
+          </p>
+          {/* Value prop — concise */}
+          {tracks.map((tt, i) => (
+            <p key={i} className="text-[11px] text-muted-foreground leading-relaxed">{truncate(tt.message, 180)}</p>
+          ))}
+
+          {/* Toggle buttons */}
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => setShowDiscovery((v) => !v)}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors',
+                showDiscovery
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50',
+              )}
+            >
+              <ChevronDown className={cn('w-3 h-3 transition-transform', showDiscovery && 'rotate-180')} />
+              Discovery questions
+            </button>
+            {challengerQ && (
+              <button
+                type="button"
+                onClick={() => setShowChallenger((v) => !v)}
+                className={cn(
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors',
+                  showChallenger
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50',
+                )}
+              >
+                <ChevronDown className={cn('w-3 h-3 transition-transform', showChallenger && 'rotate-180')} />
+                Challenger question
+              </button>
+            )}
+          </div>
+
+          {/* Expanded: discovery */}
+          {showDiscovery && discoveryAgenda.length > 0 && (
+            <div className="mt-2 space-y-1 border-t border-border/20 pt-2">
+              {discoveryAgenda.slice(0, 4).map((d, i) => (
+                <div key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                  <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                  <span><span className="font-medium text-foreground">{d.theme}:</span> {d.question}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Expanded: challenger */}
+          {showChallenger && challengerQ && (
+            <div className="mt-2 border-t border-border/20 pt-2">
+              <p className="text-[11px] text-muted-foreground italic">{challengerQ}</p>
+            </div>
+          )}
+        </SectionCard>
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+/* ── Delivery Assets Accordion ── */
+
+function DeliveryAssetsAccordion({ deliveryAssets }: {
+  deliveryAssets: {
+    discovery_agenda: DiscoveryItem[];
+    workshop_plan: { step: string; description: string }[];
+    pilot_scope: { in_scope: string[]; out_of_scope: string[]; deliverables: string[]; stakeholders: string[] };
+  };
+}) {
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [openPilotSub, setOpenPilotSub] = useState<string | null>(null);
+
+  const toggle = (key: string) => setOpenSection((v) => (v === key ? null : key));
+  const togglePilot = (key: string) => setOpenPilotSub((v) => (v === key ? null : key));
+
+  const hasPilot =
+    deliveryAssets.pilot_scope.in_scope.length > 0 ||
+    deliveryAssets.pilot_scope.out_of_scope.length > 0 ||
+    deliveryAssets.pilot_scope.deliverables.length > 0 ||
+    deliveryAssets.pilot_scope.stakeholders.length > 0;
+
+  const sections = [
+    { key: 'discovery', label: 'Discovery call agenda', count: deliveryAssets.discovery_agenda.length },
+    { key: 'workshop', label: 'Workshop agenda', count: deliveryAssets.workshop_plan.length },
+    { key: 'pilot', label: 'Pilot scope', count: hasPilot ? 1 : 0 },
+  ];
+
+  const pilotSubs = [
+    { key: 'in', label: 'In-scope', items: deliveryAssets.pilot_scope.in_scope },
+    { key: 'out', label: 'Out-of-scope', items: deliveryAssets.pilot_scope.out_of_scope },
+    { key: 'deliverables', label: 'Deliverables', items: deliveryAssets.pilot_scope.deliverables },
+    { key: 'stakeholders', label: 'Stakeholders', items: deliveryAssets.pilot_scope.stakeholders },
+  ].filter((s) => s.items.length > 0);
+
+  return (
+    <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, and pilot scope" defaultOpen={false}>
+      <div className="space-y-0.5">
+        {sections.map(({ key, label, count }) => (
+          <div key={key} className="rounded-lg border border-border/40 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggle(key)}
+              className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+            >
+              <span className="text-[11px] font-semibold text-foreground">{label}</span>
+              <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform duration-200', openSection === key && 'rotate-180')} />
+            </button>
+
+            <div className={cn(
+              'grid transition-all duration-200 ease-in-out',
+              openSection === key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+            )}>
+              <div className="overflow-hidden">
+                <div className="px-3 pb-2 space-y-1">
+                  {key === 'discovery' && (
+                    count > 0 ? deliveryAssets.discovery_agenda.map((d, i) => (
+                      <div key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                        <span><span className="font-medium text-foreground">{d.theme}:</span> {truncate(d.question, 140)}</span>
+                      </div>
+                    )) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                  )}
+
+                  {key === 'workshop' && (
+                    count > 0 ? deliveryAssets.workshop_plan.map((w, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                        <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+                        <span><span className="font-medium text-foreground">{w.step}:</span> {truncate(w.description, 120)}</span>
+                      </div>
+                    )) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                  )}
+
+                  {key === 'pilot' && (
+                    hasPilot ? (
+                      <div className="space-y-0.5">
+                        {pilotSubs.map((sub) => (
+                          <div key={sub.key} className="rounded border border-border/30 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => togglePilot(sub.key)}
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted/20 transition-colors"
+                            >
+                              <span className="text-[10px] font-semibold text-foreground">{sub.label}</span>
+                              <ChevronDown className={cn('w-3 h-3 text-muted-foreground transition-transform duration-200', openPilotSub === sub.key && 'rotate-180')} />
+                            </button>
+                            <div className={cn(
+                              'grid transition-all duration-200 ease-in-out',
+                              openPilotSub === sub.key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+                            )}>
+                              <div className="overflow-hidden">
+                                <ul className="px-2.5 pb-1.5 space-y-0.5">
+                                  {sub.items.map((item, i) => (
+                                    <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CollapsibleSection>
+  );
+}
 
 export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange }: Props) {
   const b = pkg.business;
@@ -252,27 +496,11 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
       <div className="border-t border-border/40 pt-3 mt-1" />
 
       {/* ── Customer engagement ── */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground">Customer engagement</p>
+      <div className="space-y-2">
+        <p className="text-[13px] font-semibold text-foreground">Customer engagement</p>
 
-        {/* 1. Stakeholders & messaging */}
-        <CollapsibleSection title="Stakeholders & messaging" subtitle="Talk tracks by persona" defaultOpen>
-          {b.positioning.talk_tracks.length > 0 ? (
-            <div className="space-y-1.5">
-              {b.positioning.talk_tracks.map((tt, i) => (
-                <SectionCard key={i} className="p-2.5">
-                  <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
-                    <Users className="w-3 h-3 text-primary/50" />
-                    {tt.persona}
-                  </p>
-                  <Body>{truncate(tt.message, 180)}</Body>
-                </SectionCard>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
-          )}
-        </CollapsibleSection>
+        {/* 1. Stakeholders & messaging — Card Tabs UI */}
+        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} />
 
         {/* 2. Objection handling (max 5) */}
         <CollapsibleSection title="Objection handling" subtitle="Anticipated objections and responses" defaultOpen>
@@ -283,7 +511,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
               return (
                 <div className="space-y-1.5">
                   {items.map((obj) => (
-                    <SectionCard key={obj.id} className="p-2.5">
+                    <SectionCard key={obj.id} className="p-2">
                       <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
                         <Shield className="w-3 h-3 text-primary/50" />
                         {obj.theme}
@@ -304,7 +532,6 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
                 </div>
               );
             }
-            // Fallback: use open_questions as proxy
             if (b.open_questions.length > 0) {
               return (
                 <div className="space-y-1">
@@ -326,7 +553,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           {b.commercial_assets.kpis.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {b.commercial_assets.kpis.map((k, i) => (
-                <SectionCard key={i} className="p-2.5">
+                <SectionCard key={i} className="p-2">
                   <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
                     <BarChart3 className="w-3 h-3 text-primary/50" />
                     {k.label}
@@ -340,99 +567,8 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           )}
         </CollapsibleSection>
 
-        {/* 4. Delivery assets */}
-        <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, and pilot scope" defaultOpen={false}>
-          <div className="space-y-3">
-            {/* Discovery call agenda */}
-            <div className="space-y-1.5">
-              <Label>Discovery call agenda</Label>
-              {b.delivery_assets.discovery_agenda.length > 0 ? (
-                b.delivery_assets.discovery_agenda.map((d, i) => (
-                  <SectionCard key={i} className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">{d.theme}</p>
-                    <Body>{truncate(d.question, 160)}</Body>
-                  </SectionCard>
-                ))
-              ) : (
-                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
-              )}
-            </div>
-
-            {/* Workshop agenda */}
-            <div className="space-y-1.5">
-              <Label>Workshop agenda</Label>
-              {b.delivery_assets.workshop_plan.length > 0 ? (
-                b.delivery_assets.workshop_plan.map((w, i) => (
-                  <SectionCard key={i} className="p-2.5">
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
-                      <div>
-                        <p className="text-[10px] font-semibold text-foreground">{w.step}</p>
-                        <Body>{truncate(w.description, 120)}</Body>
-                      </div>
-                    </div>
-                  </SectionCard>
-                ))
-              ) : (
-                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
-              )}
-            </div>
-
-            {/* Pilot scope */}
-            <div className="space-y-1.5">
-              <Label>Pilot scope</Label>
-              {(b.delivery_assets.pilot_scope.in_scope.length > 0 ||
-                b.delivery_assets.pilot_scope.out_of_scope.length > 0 ||
-                b.delivery_assets.pilot_scope.deliverables.length > 0 ||
-                b.delivery_assets.pilot_scope.stakeholders.length > 0) ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  <SectionCard className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">In scope</p>
-                    <ul className="space-y-0.5">
-                      {b.delivery_assets.pilot_scope.in_scope.map((s, i) => (
-                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </SectionCard>
-                  <SectionCard className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">Out of scope</p>
-                    <ul className="space-y-0.5">
-                      {b.delivery_assets.pilot_scope.out_of_scope.map((s, i) => (
-                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                          <span className="text-destructive/40 mt-0.5 flex-shrink-0 text-[10px]">-</span> {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </SectionCard>
-                  <SectionCard className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">Deliverables</p>
-                    <ul className="space-y-0.5">
-                      {b.delivery_assets.pilot_scope.deliverables.map((d, i) => (
-                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {d}
-                        </li>
-                      ))}
-                    </ul>
-                  </SectionCard>
-                  <SectionCard className="p-2.5">
-                    <p className="text-[10px] font-semibold text-foreground">Stakeholders</p>
-                    <ul className="space-y-0.5">
-                      {b.delivery_assets.pilot_scope.stakeholders.map((s, i) => (
-                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </SectionCard>
-                </div>
-              ) : (
-                <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
-              )}
-            </div>
-          </div>
-        </CollapsibleSection>
+        {/* 4. Delivery assets — Accordion */}
+        <DeliveryAssetsAccordion deliveryAssets={b.delivery_assets} />
       </div>
 
       {/* ── Support Drawer (right-side overlay) ── */}

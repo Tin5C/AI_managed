@@ -2,9 +2,13 @@
 // Advisory only — does not modify deal plan structure
 
 import { useMemo } from 'react';
-import { ChevronDown, Lightbulb } from 'lucide-react';
+import { ChevronDown, Lightbulb, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getReadinessScore, type EvidencePillar } from '@/data/partner/accountMemoryStore';
+
+// ============= Entry Mode =============
+
+export type EntryMode = 'guided' | 'problem';
 
 // ============= Engagement Type =============
 
@@ -83,6 +87,10 @@ interface DealPlanMetadataProps {
   onMotionChange: (motion: Motion | null) => void;
   /** Hide "Next Best Adds" yellow pills (default true) */
   showNextAdds?: boolean;
+  entryMode?: EntryMode;
+  onEntryModeChange?: (mode: EntryMode) => void;
+  customerProblem?: string;
+  onCustomerProblemChange?: (text: string) => void;
 }
 
 export function DealPlanMetadata({
@@ -93,6 +101,10 @@ export function DealPlanMetadata({
   motion,
   onMotionChange,
   showNextAdds = true,
+  entryMode = 'guided',
+  onEntryModeChange,
+  customerProblem = '',
+  onCustomerProblemChange,
 }: DealPlanMetadataProps) {
   const { score, pillars } = useMemo(
     () => getReadinessScore(accountId, hasPromotedSignals),
@@ -108,56 +120,103 @@ export function DealPlanMetadata({
 
   return (
     <>
-      {/* Engagement Type */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Type</span>
-        <div className="relative">
-          <select
-            value={engagementType ?? ''}
-            onChange={(e) => {
-              const val = e.target.value as EngagementType | '';
-              onEngagementTypeChange(val || null);
-              // Reset motion when type changes since options differ
-              onMotionChange(null);
-            }}
-            className="appearance-none text-xs font-medium text-foreground bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 pr-7 cursor-pointer hover:border-primary/30 transition-colors"
-          >
-            <option value="">Select type…</option>
-            {ENGAGEMENT_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Entry mode toggle */}
+      {onEntryModeChange && (
+        <div className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-muted/20 p-0.5">
+          {(['guided', 'problem'] as EntryMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => onEntryModeChange(mode)}
+              className={cn(
+                'px-2 py-1 rounded-md text-[10px] font-medium transition-colors capitalize',
+                entryMode === mode
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {mode === 'problem' ? 'Problem-first' : 'Guided'}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Motion */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Motion</span>
-        <div className="relative">
-          <select
-            value={motion ?? ''}
-            onChange={(e) =>
-              onMotionChange(e.target.value || null)
-            }
-            disabled={!engagementType}
-            className={cn(
-              "appearance-none text-xs font-medium text-foreground bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 pr-7 cursor-pointer hover:border-primary/30 transition-colors",
-              !engagementType && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            <option value="">Select motion…</option>
-            {motionOptions.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-          <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {entryMode === 'guided' ? (
+        <>
+          {/* Engagement Type */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Type</span>
+            <div className="relative">
+              <select
+                value={engagementType ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value as EngagementType | '';
+                  onEngagementTypeChange(val || null);
+                  onMotionChange(null);
+                }}
+                className="appearance-none text-xs font-medium text-foreground bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 pr-7 cursor-pointer hover:border-primary/30 transition-colors"
+              >
+                <option value="">Select type…</option>
+                {ENGAGEMENT_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Motion */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Motion</span>
+            <div className="relative">
+              <select
+                value={motion ?? ''}
+                onChange={(e) => onMotionChange(e.target.value || null)}
+                disabled={!engagementType}
+                className={cn(
+                  "appearance-none text-xs font-medium text-foreground bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 pr-7 cursor-pointer hover:border-primary/30 transition-colors",
+                  !engagementType && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <option value="">Select motion…</option>
+                {motionOptions.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-muted-foreground absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Problem-first mode */
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={customerProblem}
+                onChange={(e) => onCustomerProblemChange?.(e.target.value)}
+                placeholder="Describe the customer problem…"
+                className="flex-1 min-w-0 text-xs bg-muted/30 border border-border/60 rounded-lg px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+              />
+              {customerProblem && (
+                <button
+                  type="button"
+                  onClick={() => onCustomerProblemChange?.('')}
+                  className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <span className="text-[9px] text-muted-foreground/60">Frames recommendations; does not change scoring.</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Readiness — far right */}
       <span className="text-[11px] text-muted-foreground ml-auto whitespace-nowrap">
-        Readiness: <span className={cn('font-medium', score >= 60 ? 'text-green-600' : 'text-muted-foreground')}>{score}%</span>
+        Readiness: <span className={cn('font-medium', score >= 60 ? 'text-primary' : 'text-muted-foreground')}>{score}%</span>
       </span>
 
       {/* Next Best Adds — render below the row via parent flex-wrap */}

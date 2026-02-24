@@ -67,6 +67,7 @@ import {
   DealPlanMetadata,
   type EngagementType,
   type Motion,
+  type EntryMode,
 } from './DealPlanMetadata';
 import { scoreServicePacks, type ScoredPack } from '@/data/partner/servicePackStore';
 import { partner_service_configuration } from '@/data/partner/partnerServiceConfiguration';
@@ -370,6 +371,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
 
   const [engagementType, setEngagementType] = useState<EngagementType | null>(null);
   const [motion, setMotion] = useState<Motion | null>(null);
+  const [entryMode, setEntryMode] = useState<EntryMode>('guided');
+  const [customerProblem, setCustomerProblem] = useState('');
 
   // Apply preselected type/motion when account changes
   useEffect(() => {
@@ -555,6 +558,10 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
           motion={motion}
           onMotionChange={setMotion}
           showNextAdds={false}
+          entryMode={entryMode}
+          onEntryModeChange={setEntryMode}
+          customerProblem={customerProblem}
+          onCustomerProblemChange={setCustomerProblem}
         />
       </div>
     </div>
@@ -673,6 +680,22 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
       <div className="space-y-4">
         {/* Main workspace (full-width — right rail removed) */}
         <div className="flex-1 min-w-0 space-y-4">
+
+          {/* Problem-first focus pill */}
+          {entryMode === 'problem' && customerProblem.trim() && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/[0.05] border border-primary/15">
+              <span className="text-[10px] text-primary/80 font-medium truncate">
+                Focused from problem: {customerProblem}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCustomerProblem('')}
+                className="text-[9px] text-muted-foreground hover:text-foreground underline flex-shrink-0"
+              >
+                Clear
+              </button>
+            </div>
+          )}
 
           {/* ===== SHARED HERO: Recommended Plays ===== */}
           <RecommendedPlaysPanel

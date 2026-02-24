@@ -99,7 +99,7 @@ import { getBusinessPlayPackage, getAvailableVariants, type BusinessVariant } fr
 import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
-import { getDealPlanningSelection } from '@/data/partner/dealPlanningSelectionStore';
+import { getDealPlanningSelection, getEntryMode, setEntryMode, getCustomerProblem, setCustomerProblem, type EntryMode } from '@/data/partner/dealPlanningSelectionStore';
 
 const WEEK_OF = '2026-02-10';
 
@@ -371,6 +371,20 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [engagementType, setEngagementType] = useState<EngagementType | null>(null);
   const [motion, setMotion] = useState<Motion | null>(null);
 
+  // Entry mode state (guided vs problem-first)
+  const [entryMode, setEntryModeLocal] = useState<EntryMode>('guided');
+  const [customerProblem, setCustomerProblemLocal] = useState('');
+
+  const handleEntryModeChange = useCallback((mode: EntryMode) => {
+    setEntryModeLocal(mode);
+    if (selectedAccount) setEntryMode(selectedAccount, mode);
+  }, [selectedAccount]);
+
+  const handleCustomerProblemChange = useCallback((text: string) => {
+    setCustomerProblemLocal(text);
+    if (selectedAccount) setCustomerProblem(selectedAccount, text);
+  }, [selectedAccount]);
+
   // Apply preselected type/motion when account changes
   useEffect(() => {
     if (!selectedAccount) return;
@@ -378,6 +392,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
     if (sel) {
       setEngagementType(sel.type as EngagementType);
       setMotion(sel.motion as Motion);
+      setEntryModeLocal(sel.entryMode ?? 'guided');
+      setCustomerProblemLocal(sel.customerProblem ?? '');
     }
   }, [selectedAccount]);
 
@@ -433,7 +449,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [planGenerated, setPlanGenerated] = useState(false);
   const [composerFallbackJson, setComposerFallbackJson] = useState<string | null>(null);
   const [businessVariant, setBusinessVariant] = useState<BusinessVariant>('executive');
-  const canGenerate = selectedAccount !== null && engagementType !== null && motion !== null;
+  const canGenerate = selectedAccount !== null && (entryMode === 'problem' ? customerProblem.trim().length > 0 : (engagementType !== null && motion !== null));
 
   const [inboxVersion, setInboxVersion] = useState(0);
   const inboxItems = useMemo(
@@ -547,16 +563,68 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Account</span>
           <AccountSelector selectedId={selectedAccount} onSelect={setSelectedAccount} />
         </div>
-        <DealPlanMetadata
-          accountId={selectedAccount ?? ''}
-          hasPromotedSignals={drivers.length > 0}
-          engagementType={engagementType}
-          onEngagementTypeChange={setEngagementType}
-          motion={motion}
-          onMotionChange={setMotion}
-          showNextAdds={false}
-        />
+
+        {/* Entry mode toggle */}
+        <div className="inline-flex rounded-md bg-muted/50 p-0.5 border border-border/60">
+          {(['guided', 'problem'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => handleEntryModeChange(mode)}
+              className={cn(
+                'px-2.5 py-1 rounded text-[10px] font-medium transition-all capitalize',
+                entryMode === mode
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {mode === 'guided' ? 'Guided' : 'Problem-first'}
+            </button>
+          ))}
+        </div>
+
+        {/* Guided: Type + Motion dropdowns */}
+        {entryMode === 'guided' && (
+          <DealPlanMetadata
+            accountId={selectedAccount ?? ''}
+            hasPromotedSignals={drivers.length > 0}
+            engagementType={engagementType}
+            onEngagementTypeChange={setEngagementType}
+            motion={motion}
+            onMotionChange={setMotion}
+            showNextAdds={false}
+          />
+        )}
       </div>
+
+      {/* Problem-first: text input */}
+      {entryMode === 'problem' && (
+        <div className="space-y-1 max-w-lg">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+            Customer problem
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={customerProblem}
+              onChange={(e) => handleCustomerProblemChange(e.target.value)}
+              placeholder="e.g. Legacy on-prem systems can't scale for AI workloads..."
+              className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-border bg-background focus:border-primary/40 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
+            />
+            {customerProblem.trim().length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleCustomerProblemChange('')}
+                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
+              >
+                <X className="w-3 h-3" /> Clear
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 italic">
+            Frames recommendations; does not change scoring.
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -661,8 +729,10 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
           {!canGenerate && (
             <p className="text-[11px] text-muted-foreground text-center">
               {!selectedAccount
-                ? 'Select an account, then choose Engagement Type and Motion to generate the plan.'
-                : 'Select Engagement Type and Motion to generate the plan.'}
+                ? 'Select an account to generate the plan.'
+                : entryMode === 'problem'
+                  ? 'Describe a customer problem to generate the plan.'
+                  : 'Select Engagement Type and Motion to generate the plan.'}
             </p>
           )}
         </div>
@@ -673,6 +743,24 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
       <div className="space-y-4">
         {/* Main workspace (full-width — right rail removed) */}
         <div className="flex-1 min-w-0 space-y-4">
+
+          {/* ===== Problem-first focus pill ===== */}
+          {entryMode === 'problem' && customerProblem.trim().length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/[0.06] border border-primary/20">
+              <Crosshair className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+              <p className="text-[11px] text-foreground flex-1">
+                <span className="font-medium text-primary">Focused from problem:</span>{' '}
+                <span className="text-muted-foreground">{customerProblem}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => handleCustomerProblemChange('')}
+                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors flex-shrink-0"
+              >
+                <X className="w-3 h-3" /> Clear
+              </button>
+            </div>
+          )}
 
           {/* ===== SHARED HERO: Recommended Plays ===== */}
           <RecommendedPlaysPanel

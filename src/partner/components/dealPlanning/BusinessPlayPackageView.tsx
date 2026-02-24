@@ -154,7 +154,6 @@ interface TalkTrackItem { persona: string; message: string; }
 interface DiscoveryItem { theme: string; question: string; }
 
 function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[] }) {
-  // Group talk tracks by classified persona
   const grouped = talkTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
     const key = classifyPersona(tt.persona);
     (acc[key] ??= []).push(tt);
@@ -175,20 +174,19 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTra
   }
 
   const tracks = grouped[activePersona] ?? [];
-  // Use first matching discovery question as challenger question (deterministic)
   const challengerQ = discoveryAgenda.length > 0 ? discoveryAgenda[0].question : null;
 
   return (
     <CollapsibleSection title="Stakeholders & messaging" subtitle="Talk tracks by persona" defaultOpen>
-      <div className="space-y-2">
-        {/* Persona chips */}
-        <div className="flex flex-wrap gap-1.5">
+      <div className="space-y-1.5">
+        {/* Persona chips — tight row */}
+        <div className="flex flex-wrap gap-1">
           {personaKeys.map((key) => (
             <button
               key={key}
               onClick={() => { setActivePersona(key); setShowDiscovery(false); setShowChallenger(false); }}
               className={cn(
-                'px-2.5 py-1 rounded-md text-[10px] font-medium transition-all border',
+                'px-2 py-0.5 rounded text-[10px] font-medium transition-all border',
                 activePersona === key
                   ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                   : 'bg-muted/30 text-muted-foreground border-border/60 hover:bg-muted/50',
@@ -199,30 +197,29 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTra
           ))}
         </div>
 
-        {/* Active persona card */}
-        <SectionCard className="p-2.5">
-          <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5 pb-1.5 border-b border-border/30 mb-1.5">
+        {/* Active persona card — compact */}
+        <div className="p-2 rounded-lg bg-muted/20 border border-border/40">
+          <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5 pb-1 border-b border-border/30 mb-1">
             <Users className="w-3 h-3 text-primary/50" />
             {PERSONA_MAP[activePersona]}
           </p>
-          {/* Value prop — concise */}
           {tracks.map((tt, i) => (
-            <p key={i} className="text-[11px] text-muted-foreground leading-relaxed">{truncate(tt.message, 180)}</p>
+            <p key={i} className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{truncate(tt.message, 160)}</p>
           ))}
 
-          {/* Toggle buttons */}
-          <div className="flex items-center gap-2 mt-2">
+          {/* Toggle buttons — smaller */}
+          <div className="flex items-center gap-1.5 mt-1.5">
             <button
               type="button"
               onClick={() => setShowDiscovery((v) => !v)}
               className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors',
+                'inline-flex items-center gap-0.5 px-1.5 py-px rounded text-[9px] font-medium border transition-colors',
                 showDiscovery
                   ? 'bg-primary/10 text-primary border-primary/30'
                   : 'bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50',
               )}
             >
-              <ChevronDown className={cn('w-3 h-3 transition-transform', showDiscovery && 'rotate-180')} />
+              <ChevronDown className={cn('w-2.5 h-2.5 transition-transform duration-200', showDiscovery && 'rotate-180')} />
               Discovery questions
             </button>
             {challengerQ && (
@@ -230,37 +227,47 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTra
                 type="button"
                 onClick={() => setShowChallenger((v) => !v)}
                 className={cn(
-                  'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border transition-colors',
+                  'inline-flex items-center gap-0.5 px-1.5 py-px rounded text-[9px] font-medium border transition-colors',
                   showChallenger
                     ? 'bg-primary/10 text-primary border-primary/30'
                     : 'bg-muted/30 text-muted-foreground border-border/50 hover:bg-muted/50',
                 )}
               >
-                <ChevronDown className={cn('w-3 h-3 transition-transform', showChallenger && 'rotate-180')} />
+                <ChevronDown className={cn('w-2.5 h-2.5 transition-transform duration-200', showChallenger && 'rotate-180')} />
                 Challenger question
               </button>
             )}
           </div>
 
-          {/* Expanded: discovery */}
-          {showDiscovery && discoveryAgenda.length > 0 && (
-            <div className="mt-2 space-y-1 border-t border-border/20 pt-2">
-              {discoveryAgenda.slice(0, 4).map((d, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                  <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                  <span><span className="font-medium text-foreground">{d.theme}:</span> {d.question}</span>
-                </div>
-              ))}
+          {/* Animated discovery expand */}
+          <div className={cn(
+            'grid transition-all duration-200 ease-in-out',
+            showDiscovery && discoveryAgenda.length > 0 ? 'grid-rows-[1fr] opacity-100 mt-1.5' : 'grid-rows-[0fr] opacity-0',
+          )}>
+            <div className="overflow-hidden">
+              <div className="space-y-0.5 border-t border-border/20 pt-1.5">
+                {discoveryAgenda.slice(0, 4).map((d, i) => (
+                  <div key={i} className="flex items-start gap-1 text-[10px] text-muted-foreground leading-snug">
+                    <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
+                    <span><span className="font-medium text-foreground">{d.theme}:</span> {d.question}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Expanded: challenger */}
-          {showChallenger && challengerQ && (
-            <div className="mt-2 border-t border-border/20 pt-2">
-              <p className="text-[11px] text-muted-foreground italic">{challengerQ}</p>
+          {/* Animated challenger expand */}
+          <div className={cn(
+            'grid transition-all duration-200 ease-in-out',
+            showChallenger && challengerQ ? 'grid-rows-[1fr] opacity-100 mt-1.5' : 'grid-rows-[0fr] opacity-0',
+          )}>
+            <div className="overflow-hidden">
+              <div className="border-t border-border/20 pt-1.5">
+                <p className="text-[10px] text-muted-foreground italic leading-snug">{challengerQ}</p>
+              </div>
             </div>
-          )}
-        </SectionCard>
+          </div>
+        </div>
       </div>
     </CollapsibleSection>
   );
@@ -432,16 +439,16 @@ function DeliveryAssetsAccordion({ deliveryAssets }: {
 
   return (
     <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, and pilot scope" defaultOpen={false}>
-      <div className="space-y-0.5">
+      <div className="space-y-px">
         {sections.map(({ key, label, count }) => (
-          <div key={key} className="rounded-lg border border-border/40 overflow-hidden">
+          <div key={key} className="rounded border border-border/30 overflow-hidden">
             <button
               type="button"
               onClick={() => toggle(key)}
-              className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted/20 transition-colors"
             >
-              <span className="text-[11px] font-semibold text-foreground">{label}</span>
-              <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform duration-200', openSection === key && 'rotate-180')} />
+              <span className="text-[10px] font-semibold text-foreground">{label}</span>
+              <ChevronDown className={cn('w-3 h-3 text-muted-foreground flex-shrink-0 transition-transform duration-200', openSection === key && 'rotate-180')} />
             </button>
 
             <div className={cn(
@@ -449,47 +456,47 @@ function DeliveryAssetsAccordion({ deliveryAssets }: {
               openSection === key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
             )}>
               <div className="overflow-hidden">
-                <div className="px-3 pb-2 space-y-1">
+                <div className="px-2.5 pb-1.5 space-y-0.5">
                   {key === 'discovery' && (
                     count > 0 ? deliveryAssets.discovery_agenda.map((d, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                        <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                        <span><span className="font-medium text-foreground">{d.theme}:</span> {truncate(d.question, 140)}</span>
+                      <div key={i} className="flex items-start gap-1 text-[10px] text-muted-foreground leading-snug">
+                        <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
+                        <span><span className="font-medium text-foreground">{d.theme}:</span> {truncate(d.question, 130)}</span>
                       </div>
-                    )) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                    )) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
                   )}
 
                   {key === 'workshop' && (
                     count > 0 ? deliveryAssets.workshop_plan.map((w, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
-                        <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
-                        <span><span className="font-medium text-foreground">{w.step}:</span> {truncate(w.description, 120)}</span>
+                      <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+                        <span className="text-[9px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+                        <span><span className="font-medium text-foreground">{w.step}:</span> {truncate(w.description, 110)}</span>
                       </div>
-                    )) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                    )) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
                   )}
 
                   {key === 'pilot' && (
                     hasPilot ? (
-                      <div className="space-y-0.5">
+                      <div className="space-y-px">
                         {pilotSubs.map((sub) => (
-                          <div key={sub.key} className="rounded border border-border/30 overflow-hidden">
+                          <div key={sub.key} className="rounded border border-border/20 overflow-hidden">
                             <button
                               type="button"
                               onClick={() => togglePilot(sub.key)}
-                              className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted/20 transition-colors"
+                              className="w-full flex items-center justify-between px-2 py-1 text-left hover:bg-muted/15 transition-colors"
                             >
-                              <span className="text-[10px] font-semibold text-foreground">{sub.label}</span>
-                              <ChevronDown className={cn('w-3 h-3 text-muted-foreground transition-transform duration-200', openPilotSub === sub.key && 'rotate-180')} />
+                              <span className="text-[9px] font-semibold text-foreground">{sub.label}</span>
+                              <ChevronDown className={cn('w-2.5 h-2.5 text-muted-foreground transition-transform duration-200', openPilotSub === sub.key && 'rotate-180')} />
                             </button>
                             <div className={cn(
                               'grid transition-all duration-200 ease-in-out',
                               openPilotSub === sub.key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
                             )}>
                               <div className="overflow-hidden">
-                                <ul className="px-2.5 pb-1.5 space-y-0.5">
+                                <ul className="px-2 pb-1 space-y-px">
                                   {sub.items.map((item, i) => (
-                                    <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                                      <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" /> {item}
+                                    <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1 leading-snug">
+                                      <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" /> {item}
                                     </li>
                                   ))}
                                 </ul>
@@ -498,7 +505,7 @@ function DeliveryAssetsAccordion({ deliveryAssets }: {
                           </div>
                         ))}
                       </div>
-                    ) : <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>
+                    ) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
                   )}
                 </div>
               </div>

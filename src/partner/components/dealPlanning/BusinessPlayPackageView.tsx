@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/businessPlayPackageStore';
-import { listObjections } from '@/data/partner/objectionStore';
+import { listObjections, type Objection } from '@/data/partner/objectionStore';
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import {
   HelpCircle,
@@ -18,6 +18,12 @@ import {
   Shield,
   BarChart3,
   Package,
+  Ear,
+  Heart,
+  Search,
+  MessageSquare,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -257,6 +263,136 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTra
         </SectionCard>
       </div>
     </CollapsibleSection>
+  );
+}
+
+/* ── Objection LAER Accordion ── */
+
+
+
+function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function mapToLAER(obj: Objection) {
+    const listen = obj.root_cause;
+    const acknowledge = `We understand this is a critical concern for your organization.`;
+    const respond = obj.what_they_need_to_see.slice(0, 3);
+    const proofAnchors = obj.what_they_need_to_see.slice(0, 3);
+    return { listen, acknowledge, respond, proofAnchors };
+  }
+
+  function handleCopy(respondItems: string[], objId: string) {
+    const text = respondItems.join('\n• ');
+    navigator.clipboard.writeText('• ' + text).then(() => {
+      setCopiedId(objId);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  }
+
+  return (
+    <div className="space-y-1">
+      {objections.map((obj) => {
+        const expanded = openId === obj.id;
+        const laer = mapToLAER(obj);
+        const preview = obj.root_cause.length > 90 ? obj.root_cause.slice(0, 87) + '…' : obj.root_cause;
+
+        return (
+          <div key={obj.id} className="rounded-lg border border-border/40 bg-muted/10 overflow-hidden transition-all">
+            <button
+              type="button"
+              onClick={() => setOpenId(expanded ? null : obj.id)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                  <Shield className="w-3 h-3 text-primary/50 flex-shrink-0" />
+                  {obj.theme}
+                </p>
+                {!expanded && (
+                  <p className="text-[10px] text-muted-foreground truncate mt-0.5 pl-[18px]">{preview}</p>
+                )}
+              </div>
+              <ChevronDown className={cn('w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform duration-200', expanded && 'rotate-180')} />
+            </button>
+
+            {expanded && (
+              <div className="px-3 pb-2.5 space-y-2 border-t border-border/30 pt-2">
+                {/* LISTEN */}
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
+                    <Ear className="w-3 h-3" /> Listen
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{laer.listen}</p>
+                </div>
+
+                <div className="border-t border-border/20" />
+
+                {/* ACKNOWLEDGE */}
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
+                    <Heart className="w-3 h-3" /> Acknowledge
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{laer.acknowledge}</p>
+                </div>
+
+                <div className="border-t border-border/20" />
+
+                {/* EXPLORE */}
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
+                    <Search className="w-3 h-3" /> Explore
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 italic">Discovery questions not captured yet.</p>
+                </div>
+
+                <div className="border-t border-border/20" />
+
+                {/* RESPOND */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> Respond
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(laer.respond, obj.id)}
+                      className="text-[9px] text-muted-foreground/60 hover:text-foreground flex items-center gap-1 transition-colors"
+                    >
+                      {copiedId === obj.id ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
+                      {copiedId === obj.id ? 'Copied' : 'Copy response'}
+                    </button>
+                  </div>
+                  {laer.respond.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {laer.respond.map((item, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
+                  )}
+
+                  {/* Proof anchors */}
+                  {laer.proofAnchors.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {laer.proofAnchors.map((anchor, i) => (
+                        <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/[0.08] text-primary/70 border border-primary/15">
+                          {anchor}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -502,35 +638,13 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         {/* 1. Stakeholders & messaging — Card Tabs UI */}
         <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} />
 
-        {/* 2. Objection handling (max 5) */}
-        <CollapsibleSection title="Objection handling" subtitle="Anticipated objections and responses" defaultOpen>
+        {/* 2. Objection handling (LAER) */}
+        <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>
           {(() => {
             const objections = listObjections(pkg.focus_id !== '' ? 'alpnova' : '', { account_id: pkg.focus_id || undefined });
             const items = objections.slice(0, 5);
             if (items.length > 0) {
-              return (
-                <div className="space-y-1.5">
-                  {items.map((obj) => (
-                    <SectionCard key={obj.id} className="p-2">
-                      <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
-                        <Shield className="w-3 h-3 text-primary/50" />
-                        {obj.theme}
-                      </p>
-                      <Body>{obj.root_cause}</Body>
-                      {obj.what_they_need_to_see.length > 0 && (
-                        <ul className="mt-1 space-y-0.5">
-                          {obj.what_they_need_to_see.slice(0, 3).map((item, i) => (
-                            <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                              <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </SectionCard>
-                  ))}
-                </div>
-              );
+              return <ObjectionLAERAccordion objections={items} />;
             }
             if (b.open_questions.length > 0) {
               return (

@@ -2,10 +2,14 @@
 // Partner-only. Read-only display. No mutations.
 // Main canvas: 4 cards (Objective, POV, Plan, Proof). Customer engagement below. Detail in Support drawer.
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/businessPlayPackageStore';
 import { listObjections, type Objection } from '@/data/partner/objectionStore';
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
+import type { SelectionContext } from '@/data/partner/dealPlanningSelectionStore';
+import { getSignal } from '@/data/partner/signalStore';
+import { getByFocusId as getTrendPack } from '@/data/partner/industryAuthorityTrendsStore';
+import { getByFocusId as getInitiativesPack } from '@/data/partner/publicInitiativesStore';
 import {
   HelpCircle,
   ChevronRight,
@@ -32,6 +36,8 @@ interface Props {
   availableVariants: BusinessVariant[];
   activeVariant: BusinessVariant;
   onVariantChange: (v: BusinessVariant) => void;
+  selectionContext?: SelectionContext;
+  focusId?: string;
 }
 
 /* ── Shared micro-components (local to this file) ── */
@@ -517,25 +523,57 @@ function DeliveryAssetsAccordion({ deliveryAssets }: {
   );
 }
 
-export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange }: Props) {
+export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange, selectionContext, focusId }: Props) {
   const b = pkg.business;
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const citationCount = b.signal_citation_ids?.length ?? 0;
 
+  // ── Resolve "Based on" titles from selectionContext IDs ──
+  const basedOnLabels = useMemo(() => {
+    if (!selectionContext) return [];
+    const labels: string[] = [];
+    const bo = selectionContext.basedOn;
+    // signals first
+    for (const sid of bo.signals) {
+      const sig = getSignal(sid);
+      if (sig) labels.push(sig.title);
+      if (labels.length >= 3) return labels;
+    }
+    // trends
+    if (focusId) {
+      const trendPack = getTrendPack(focusId);
+      if (trendPack) {
+        for (const tid of bo.trends) {
+          const t = trendPack.trends.find((tr) => tr.id === tid);
+          if (t) labels.push(t.trend_title);
+          if (labels.length >= 3) return labels;
+        }
+      }
+    }
+    // initiatives
+    if (focusId) {
+      const initPack = getInitiativesPack(focusId);
+      if (initPack) {
+        for (const iid of bo.initiatives) {
+          const init = initPack.public_it_initiatives.find((i) => i.id === iid);
+          if (init) labels.push(init.title);
+          if (labels.length >= 3) return labels;
+        }
+      }
+    }
+    return labels;
+  }, [selectionContext, focusId]);
+
   // ── Storyline card content (deterministic extraction) ──
-  // Objective: first sentence of deal_strategy.what
   const objectiveSentences = splitSentences(b.deal_strategy.what, 1);
   const objectiveText = objectiveSentences[0] || PLACEHOLDER;
 
-  // Point of View: first sentence of positioning.executive_pov
   const povSentences = splitSentences(b.positioning.executive_pov, 1);
   const povText = povSentences[0] || PLACEHOLDER;
 
-  // Plan: first 3 steps from deal_strategy.how (already an array)
   const planBullets = b.deal_strategy.how.slice(0, 3);
 
-  // Proof: first 3 value hypotheses descriptions
   const proofBullets = b.commercial_assets.value_hypotheses
     .slice(0, 3)
     .map((vh) => vh.description);
@@ -582,6 +620,12 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         <SectionCard className="sm:col-span-2">
           <Label>Objective</Label>
           <Body>{objectiveText}</Body>
+          {basedOnLabels.length > 0 && (
+            <p className="text-[10px] text-muted-foreground/70 mt-1">
+              <span className="font-medium text-muted-foreground">Based on:</span>{' '}
+              {basedOnLabels.join(' · ')}
+            </p>
+          )}
         </SectionCard>
 
         {/* Card B — Point of View */}

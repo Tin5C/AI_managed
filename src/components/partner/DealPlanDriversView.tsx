@@ -99,7 +99,7 @@ import { getBusinessPlayPackage, getAvailableVariants, type BusinessVariant } fr
 import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
-import { getDealPlanningSelection, getEntryMode, setEntryMode, getCustomerProblem, setCustomerProblem, type EntryMode } from '@/data/partner/dealPlanningSelectionStore';
+import { getDealPlanningSelection, getEntryMode, setEntryMode, getCustomerProblem, setCustomerProblem, getSelectionContext, type EntryMode } from '@/data/partner/dealPlanningSelectionStore';
 
 const WEEK_OF = '2026-02-10';
 
@@ -850,6 +850,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                       availableVariants={variants}
                       activeVariant={effectiveVariant}
                       onVariantChange={setBusinessVariant}
+                      selectionContext={selectedAccount ? getSelectionContext(selectedAccount) : undefined}
+                      focusId={selectedAccount ?? undefined}
                     />
                   );
                 }

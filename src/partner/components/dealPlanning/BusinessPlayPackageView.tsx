@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Copy,
   Check,
+  Link2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -159,7 +160,7 @@ function classifyPersona(persona: string): string {
 interface TalkTrackItem { persona: string; message: string; }
 interface DiscoveryItem { theme: string; question: string; }
 
-function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[] }) {
+function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [] }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[]; driverLabels?: string[] }) {
   const grouped = talkTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
     const key = classifyPersona(tt.persona);
     (acc[key] ??= []).push(tt);
@@ -212,6 +213,20 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda }: { talkTracks: TalkTra
           {tracks.map((tt, i) => (
             <p key={i} className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{truncate(tt.message, 160)}</p>
           ))}
+
+          {/* Aligned to selected drivers — inside persona card */}
+          {driverLabels.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap mt-1 pt-1 border-t border-border/20">
+              <span className="text-[9px] text-muted-foreground/50 font-medium flex items-center gap-0.5">
+                <Link2 className="w-2.5 h-2.5" /> Aligned to:
+              </span>
+              {driverLabels.slice(0, 3).map((l, i) => (
+                <span key={i} className="inline-flex items-center px-1.5 py-px rounded-full bg-primary/[0.06] text-primary/60 text-[9px] border border-primary/10">
+                  {l.length > 40 ? l.slice(0, 37) + '…' : l}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Toggle buttons — smaller */}
           <div className="flex items-center gap-1.5 mt-1.5">
@@ -621,10 +636,24 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           <Label>Objective</Label>
           <Body>{objectiveText}</Body>
           {basedOnLabels.length > 0 && (
-            <p className="text-[10px] text-muted-foreground/70 mt-1">
-              <span className="font-medium text-muted-foreground">Based on:</span>{' '}
-              {basedOnLabels.join(' · ')}
-            </p>
+            <div className="mt-1.5 space-y-0.5">
+              <p className="text-[10px] text-muted-foreground/70">
+                <span className="font-medium text-muted-foreground">Based on:</span>{' '}
+                {basedOnLabels.join(' · ')}
+              </p>
+              <p className="text-[9px] text-muted-foreground/50 flex items-center gap-1">
+                <Link2 className="w-2.5 h-2.5" />
+                <span className="font-medium">Aligned to selected drivers:</span>{' '}
+                {basedOnLabels.slice(0, 3).map((l, i) => (
+                  <span key={i} className="inline-flex items-center px-1.5 py-px rounded-full bg-primary/[0.06] text-primary/60 text-[9px] border border-primary/10 mr-0.5">
+                    {l.length > 50 ? l.slice(0, 47) + '…' : l}
+                  </span>
+                ))}
+                {basedOnLabels.length > 3 && (
+                  <span className="text-[9px] text-muted-foreground/40">+{basedOnLabels.length - 3} more</span>
+                )}
+              </p>
+            </div>
           )}
         </SectionCard>
 
@@ -687,7 +716,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         <p className="text-[13px] font-semibold text-foreground">Customer engagement</p>
 
         {/* 1. Stakeholders & messaging — Card Tabs UI */}
-        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} />
+        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} />
 
         {/* 2. Objection handling (LAER) */}
         <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>

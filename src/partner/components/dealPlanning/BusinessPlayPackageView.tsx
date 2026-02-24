@@ -4,7 +4,6 @@
 
 import { useState, useMemo } from 'react';
 import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/businessPlayPackageStore';
-import { listObjections, type Objection } from '@/data/partner/objectionStore';
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import type { SelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 import { getSignal } from '@/data/partner/signalStore';
@@ -298,17 +297,9 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [] }: { 
 
 
 
-function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
+function ObjectionLAERAccordion({ objections }: { objections: import('@/data/partner/businessPlayPackageStore').BusinessObjection[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  function mapToLAER(obj: Objection) {
-    const listen = obj.root_cause;
-    const acknowledge = `We understand this is a critical concern for your organization.`;
-    const respond = obj.what_they_need_to_see.slice(0, 3);
-    const proofAnchors = obj.what_they_need_to_see.slice(0, 3);
-    return { listen, acknowledge, respond, proofAnchors };
-  }
 
   function handleCopy(respondItems: string[], objId: string) {
     const text = respondItems.join('\n• ');
@@ -320,22 +311,26 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
 
   return (
     <div className="space-y-1">
-      {objections.map((obj) => {
-        const expanded = openId === obj.id;
-        const laer = mapToLAER(obj);
-        const preview = obj.root_cause.length > 90 ? obj.root_cause.slice(0, 87) + '…' : obj.root_cause;
+      {objections.map((obj, idx) => {
+        const id = `obj-${idx}`;
+        const expanded = openId === id;
+        const preview = obj.preview
+          ? obj.preview
+          : obj.laer.listen.length > 90
+            ? obj.laer.listen.slice(0, 87) + '…'
+            : obj.laer.listen;
 
         return (
-          <div key={obj.id} className="rounded-lg border border-border/40 bg-muted/10 overflow-hidden transition-all">
+          <div key={id} className="rounded-lg border border-border/40 bg-muted/10 overflow-hidden transition-all">
             <button
               type="button"
-              onClick={() => setOpenId(expanded ? null : obj.id)}
+              onClick={() => setOpenId(expanded ? null : id)}
               className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-muted/20 transition-colors"
             >
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
                   <Shield className="w-3 h-3 text-primary/50 flex-shrink-0" />
-                  {obj.theme}
+                  {obj.title}
                 </p>
                 {!expanded && (
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 pl-[18px]">{preview}</p>
@@ -351,7 +346,7 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
                     <Ear className="w-3 h-3" /> Listen
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{laer.listen}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{obj.laer.listen}</p>
                 </div>
 
                 <div className="border-t border-border/20" />
@@ -361,7 +356,7 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
                     <Heart className="w-3 h-3" /> Acknowledge
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{laer.acknowledge}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{obj.laer.acknowledge}</p>
                 </div>
 
                 <div className="border-t border-border/20" />
@@ -371,7 +366,18 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
                     <Search className="w-3 h-3" /> Explore
                   </p>
-                  <p className="text-[10px] text-muted-foreground/60 italic">Discovery questions not captured yet.</p>
+                  {obj.laer.explore.length > 0 ? (
+                    <ul className="space-y-0.5">
+                      {obj.laer.explore.map((q, i) => (
+                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                          <HelpCircle className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground/60 italic">Discovery questions not captured yet.</p>
+                  )}
                 </div>
 
                 <div className="border-t border-border/20" />
@@ -384,16 +390,16 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
                     </p>
                     <button
                       type="button"
-                      onClick={() => handleCopy(laer.respond, obj.id)}
+                      onClick={() => handleCopy(obj.laer.respond, id)}
                       className="text-[9px] text-muted-foreground/60 hover:text-foreground flex items-center gap-1 transition-colors"
                     >
-                      {copiedId === obj.id ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
-                      {copiedId === obj.id ? 'Copied' : 'Copy response'}
+                      {copiedId === id ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
+                      {copiedId === id ? 'Copied' : 'Copy response'}
                     </button>
                   </div>
-                  {laer.respond.length > 0 ? (
+                  {obj.laer.respond.length > 0 ? (
                     <ul className="space-y-0.5">
-                      {laer.respond.map((item, i) => (
+                      {obj.laer.respond.slice(0, 3).map((item, i) => (
                         <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
                           <ChevronRight className="w-3 h-3 text-primary/40 mt-0.5 flex-shrink-0" />
                           {item}
@@ -405,9 +411,9 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
                   )}
 
                   {/* Proof anchors */}
-                  {laer.proofAnchors.length > 0 && (
+                  {obj.proof_anchors && obj.proof_anchors.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {laer.proofAnchors.map((anchor, i) => (
+                      {obj.proof_anchors.map((anchor, i) => (
                         <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/[0.08] text-primary/70 border border-primary/15">
                           {anchor}
                         </span>
@@ -423,134 +429,57 @@ function ObjectionLAERAccordion({ objections }: { objections: Objection[] }) {
     </div>
   );
 }
-
 /* ── Delivery Assets Accordion ── */
 
 function DeliveryAssetsAccordion({ deliveryAssets }: {
   deliveryAssets: {
-    discovery_agenda: DiscoveryItem[];
+    discovery_agenda: { theme: string; question: string }[];
     workshop_plan: { step: string; description: string }[];
     pilot_scope: { in_scope: string[]; out_of_scope: string[]; deliverables: string[]; stakeholders: string[] };
   };
 }) {
-  const [openSection, setOpenSection] = useState<string | null>(null);
-  const [openPilotSub, setOpenPilotSub] = useState<string | null>(null);
-
-  const toggle = (key: string) => setOpenSection((v) => (v === key ? null : key));
-  const togglePilot = (key: string) => setOpenPilotSub((v) => (v === key ? null : key));
-
-  const hasPilot =
-    deliveryAssets.pilot_scope.in_scope.length > 0 ||
-    deliveryAssets.pilot_scope.out_of_scope.length > 0 ||
-    deliveryAssets.pilot_scope.deliverables.length > 0 ||
-    deliveryAssets.pilot_scope.stakeholders.length > 0;
-
-  const sections = [
-    { key: 'discovery', label: 'Discovery call agenda', count: deliveryAssets.discovery_agenda.length },
-    { key: 'workshop', label: 'Workshop agenda', count: deliveryAssets.workshop_plan.length },
-    { key: 'pilot', label: 'Pilot scope', count: hasPilot ? 1 : 0 },
-  ];
-
-  const pilotSubs = [
-    { key: 'in', label: 'In-scope', items: deliveryAssets.pilot_scope.in_scope },
-    { key: 'out', label: 'Out-of-scope', items: deliveryAssets.pilot_scope.out_of_scope },
-    { key: 'deliverables', label: 'Deliverables', items: deliveryAssets.pilot_scope.deliverables },
-    { key: 'stakeholders', label: 'Stakeholders', items: deliveryAssets.pilot_scope.stakeholders },
-  ].filter((s) => s.items.length > 0);
-
   return (
-    <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, and pilot scope" defaultOpen={false}>
-      <div className="space-y-px">
-        {sections.map(({ key, label, count }) => (
-          <div key={key} className="rounded border border-border/30 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => toggle(key)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 text-left hover:bg-muted/20 transition-colors"
-            >
-              <span className="text-[10px] font-semibold text-foreground">{label}</span>
-              <ChevronDown className={cn('w-3 h-3 text-muted-foreground flex-shrink-0 transition-transform duration-200', openSection === key && 'rotate-180')} />
-            </button>
-
-            <div className={cn(
-              'grid transition-all duration-200 ease-in-out',
-              openSection === key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
-            )}>
-              <div className="overflow-hidden">
-                <div className="px-2.5 pb-1.5 space-y-0.5">
-                  {key === 'discovery' && (
-                    count > 0 ? deliveryAssets.discovery_agenda.map((d, i) => (
-                      <div key={i} className="flex items-start gap-1 text-[10px] text-muted-foreground leading-snug">
-                        <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
-                        <span><span className="font-medium text-foreground">{d.theme}:</span> {truncate(d.question, 130)}</span>
-                      </div>
-                    )) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
-                  )}
-
-                  {key === 'workshop' && (
-                    count > 0 ? deliveryAssets.workshop_plan.map((w, i) => (
-                      <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
-                        <span className="text-[9px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
-                        <span><span className="font-medium text-foreground">{w.step}:</span> {truncate(w.description, 110)}</span>
-                      </div>
-                    )) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
-                  )}
-
-                  {key === 'pilot' && (
-                    hasPilot ? (
-                      <div className="space-y-px">
-                        {pilotSubs.map((sub) => (
-                          <div key={sub.key} className="rounded border border-border/20 overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => togglePilot(sub.key)}
-                              className="w-full flex items-center justify-between px-2 py-1 text-left hover:bg-muted/15 transition-colors"
-                            >
-                              <span className="text-[9px] font-semibold text-foreground">{sub.label}</span>
-                              <ChevronDown className={cn('w-2.5 h-2.5 text-muted-foreground transition-transform duration-200', openPilotSub === sub.key && 'rotate-180')} />
-                            </button>
-                            <div className={cn(
-                              'grid transition-all duration-200 ease-in-out',
-                              openPilotSub === sub.key ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
-                            )}>
-                              <div className="overflow-hidden">
-                                <ul className="px-2 pb-1 space-y-px">
-                                  {sub.items.map((item, i) => (
-                                    <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1 leading-snug">
-                                      <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" /> {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : <p className="text-[10px] text-muted-foreground/60 italic">Not available yet.</p>
-                  )}
-                </div>
-              </div>
+    <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, pilot scope" defaultOpen={false}>
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <Label>Discovery Agenda</Label>
+          {deliveryAssets.discovery_agenda.slice(0, 5).map((d, i) => (
+            <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+              <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
+              <span><span className="font-medium text-foreground">{d.theme}:</span> {d.question}</span>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="space-y-1">
+          <Label>Workshop Plan</Label>
+          {deliveryAssets.workshop_plan.map((w, i) => (
+            <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+              <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+              <span><span className="font-medium text-foreground">{w.step}:</span> {w.description}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </CollapsibleSection>
   );
 }
 
+/* ── Main Component ── */
+
 export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant, onVariantChange, selectionContext, focusId }: Props) {
   const b = pkg.business;
-  const [sourcesOpen, setSourcesOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+
   const citationCount = b.signal_citation_ids?.length ?? 0;
 
-  // ── Resolve "Based on" titles from selectionContext IDs ──
+  // ── Based-on labels (deterministic from selectionContext) ──
   const basedOnLabels = useMemo(() => {
-    if (!selectionContext) return [];
     const labels: string[] = [];
-    const bo = selectionContext.basedOn;
-    // signals first
-    for (const sid of bo.signals) {
+    const bo = selectionContext;
+    if (!bo) return labels;
+    // signals
+    for (const sid of bo.basedOn.signals) {
       const sig = getSignal(sid);
       if (sig) labels.push(sig.title);
       if (labels.length >= 3) return labels;
@@ -559,9 +488,9 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
     if (focusId) {
       const trendPack = getTrendPack(focusId);
       if (trendPack) {
-        for (const tid of bo.trends) {
-          const t = trendPack.trends.find((tr) => tr.id === tid);
-          if (t) labels.push(t.trend_title);
+        for (const tid of bo.basedOn.trends) {
+          const trend = trendPack.trends.find((t) => t.id === tid);
+          if (trend) labels.push(trend.trend_title);
           if (labels.length >= 3) return labels;
         }
       }
@@ -570,7 +499,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
     if (focusId) {
       const initPack = getInitiativesPack(focusId);
       if (initPack) {
-        for (const iid of bo.initiatives) {
+        for (const iid of bo.basedOn.initiatives) {
           const init = initPack.public_it_initiatives.find((i) => i.id === iid);
           if (init) labels.push(init.title);
           if (labels.length >= 3) return labels;
@@ -721,24 +650,11 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         {/* 2. Objection handling (LAER) */}
         <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>
           {(() => {
-            const objections = listObjections(pkg.focus_id !== '' ? 'alpnova' : '', { account_id: pkg.focus_id || undefined });
-            const items = objections.slice(0, 5);
-            if (items.length > 0) {
-              return <ObjectionLAERAccordion objections={items} />;
+            const objections = b.objection_handling?.objections ?? [];
+            if (objections.length > 0) {
+              return <ObjectionLAERAccordion objections={objections} />;
             }
-            if (b.open_questions.length > 0) {
-              return (
-                <div className="space-y-1">
-                  {b.open_questions.slice(0, 5).map((q, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <HelpCircle className="w-3 h-3 text-muted-foreground/50 mt-0.5 flex-shrink-0" />
-                      {q}
-                    </div>
-                  ))}
-                </div>
-              );
-            }
-            return <p className="text-[11px] text-muted-foreground/60 italic">Not available yet.</p>;
+            return <p className="text-[11px] text-muted-foreground/60 italic">Objections not captured yet.</p>;
           })()}
         </CollapsibleSection>
 

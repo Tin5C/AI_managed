@@ -146,6 +146,93 @@ function buildPackages(): BusinessPlayPackage[] {
           'Know Copilot for Field Service licensing model and prerequisites.',
         ],
       },
+      objection_handling: {
+        objections: [
+          {
+            title: 'We already optimise cloud costs internally',
+            preview: 'Internal teams lack cross-workload visibility that a dedicated FinOps framework provides.',
+            laer: {
+              listen: 'Understood — many enterprises have existing cost-management practices in place.',
+              acknowledge: 'Internal optimisation is a strong starting point and shows financial discipline.',
+              explore: [
+                'How much visibility do you have into idle or over-provisioned resources across all subscriptions?',
+                'Are savings targets tracked at the workload level or only at the subscription level?',
+              ],
+              respond: [
+                'A structured FinOps assessment typically uncovers 15-25% additional savings beyond internal efforts by analysing cross-workload patterns.',
+                'We complement your team — not replace them — by providing tooling and benchmarks they can own going forward.',
+                'The assessment pays for itself within 90 days through identified savings.',
+              ],
+            },
+            proof_anchors: ['Azure Cost Management benchmarking', 'FinOps Foundation maturity model'],
+          },
+          {
+            title: 'AI is not a priority right now',
+            preview: 'EU Machinery Regulation 2027 creates a compliance deadline that requires early preparation.',
+            laer: {
+              listen: 'That makes sense — AI adoption has to align with business priorities.',
+              acknowledge: 'Timing is important, and rushing AI without readiness creates risk.',
+              explore: [
+                'Are you tracking the EU Machinery Regulation 2027 deadline and its implications for AI in field operations?',
+              ],
+              respond: [
+                'We lead with FinOps — immediate, measurable savings — and use that foundation to build AI readiness incrementally.',
+                'The 2027 regulatory deadline means preparation needs to start 12-18 months ahead.',
+                'A FinOps-first approach delivers value today while positioning you for AI when timing is right.',
+              ],
+            },
+            proof_anchors: ['EU Machinery Regulation timeline', 'Phased FinOps-to-AI roadmap'],
+          },
+          {
+            title: 'Data residency concerns block cloud AI',
+            preview: 'Azure Swiss North removes the data-sovereignty blocker for AI workloads.',
+            laer: {
+              listen: 'Data residency is a critical requirement — especially for regulated industries.',
+              acknowledge: 'Swiss data sovereignty is non-negotiable for many enterprise workloads.',
+              explore: [
+                'Are you aware that Azure OpenAI services are now available in the Swiss North region?',
+              ],
+              respond: [
+                'Azure Swiss North GA means AI workloads run entirely within Swiss borders — no cross-border data transfer.',
+                'Our architecture is pre-certified for Swiss data-residency compliance.',
+              ],
+            },
+            proof_anchors: ['Azure Swiss North GA announcement', 'ISO 27001 compliance mapping'],
+          },
+          {
+            title: 'We need to see ROI before committing to a pilot',
+            preview: 'The FinOps assessment is designed to deliver measurable savings before any pilot commitment.',
+            laer: {
+              listen: 'Absolutely — ROI visibility before commitment is a reasonable expectation.',
+              acknowledge: 'Pilot investments should be justified by clear business outcomes.',
+              explore: [
+                'Would a FinOps assessment that identifies concrete savings within 4 weeks satisfy the ROI threshold for pilot approval?',
+              ],
+              respond: [
+                'The FinOps assessment is fixed-fee with committed savings identification — you see the numbers before approving any pilot.',
+                'Recovered cloud spend directly funds the Copilot pilot at near-zero incremental cost.',
+                'Every deliverable has a milestone gate — you control pace and exposure.',
+              ],
+            },
+            proof_anchors: ['Fixed-fee assessment model', 'Milestone-gated pilot structure'],
+          },
+          {
+            title: 'Our procurement process takes 6+ months',
+            preview: 'A scoped assessment engagement can start under existing thresholds.',
+            laer: {
+              listen: 'Long procurement cycles are common in large enterprises.',
+              acknowledge: 'We respect the process — it exists to protect the organisation.',
+              explore: [
+                'Is there a spending threshold below which engagements can be approved faster — for example, under CHF 50K?',
+              ],
+              respond: [
+                'The FinOps assessment is scoped to fit under typical fast-track thresholds.',
+                'Results from the assessment provide the business case to justify the larger pilot through full procurement.',
+              ],
+            },
+          },
+        ],
+      },
       open_questions: [
         'Has Schindler engaged any other partner for FinOps or AI readiness?',
         'What is the internal timeline for AI governance framework approval?',
@@ -268,6 +355,81 @@ function buildPackages(): BusinessPlayPackage[] {
           'Review Schindler Developer Portal APIs before the discovery call — understand their data model.',
           'Prepare a reference architecture showing ActionBoard data flow into Azure AI services.',
           'Be ready to explain Copilot integration with existing ITSM / work-order systems.',
+        ],
+      },
+      objection_handling: {
+        objections: [
+          {
+            title: 'We already have ActionBoard — why do we need more analytics?',
+            preview: 'ActionBoard monitors units; FinOps optimises the cloud cost of running that monitoring at scale.',
+            laer: {
+              listen: 'ActionBoard is clearly a strategic investment — it shows strong digital maturity.',
+              acknowledge: 'You\'ve built a solid connected-unit foundation that most competitors lack.',
+              explore: [
+                'How much of your Azure spend is attributable to ActionBoard data ingestion and processing?',
+                'Are there cost anomalies in the IoT data pipeline that are hard to trace today?',
+              ],
+              respond: [
+                'FinOps doesn\'t replace ActionBoard — it ensures you\'re not overpaying for the infrastructure that powers it.',
+                'We typically find 15-25% savings in IoT data pipelines through right-sizing and reserved capacity.',
+                'Savings recovered from ActionBoard infrastructure directly fund the Copilot pilot.',
+              ],
+            },
+            proof_anchors: ['ActionBoard infrastructure cost analysis', 'IoT workload FinOps patterns'],
+            aligned_driver_ids: ['sig-sch-finops-ai'],
+          },
+          {
+            title: 'Our SOC team will block any new AI tooling',
+            preview: 'The architecture deploys within existing SOC monitoring — no new security tooling required.',
+            laer: {
+              listen: 'Security gating is exactly what we\'d expect from an organisation with a 24/7 SOC.',
+              acknowledge: 'Your SOC team\'s diligence protects the organisation — that\'s an asset.',
+              explore: [
+                'Does your SOC currently monitor Azure AI services, or only infrastructure and identity layers?',
+              ],
+              respond: [
+                'Our architecture integrates with your existing Azure Defender and SOC alerting — no new console, no new tooling.',
+                'The RACI model you already use extends naturally to AI workload governance.',
+                'We provide SOC-ready documentation so your security team can approve with confidence.',
+              ],
+            },
+            proof_anchors: ['SOC integration architecture', 'RACI extension for AI workloads'],
+            aligned_driver_ids: ['sig-sch-ai-governance'],
+          },
+          {
+            title: 'Copilot is unproven for field-service use cases',
+            preview: 'The pilot is scoped to 50 technicians with a go/no-go gate — exposure is capped.',
+            laer: {
+              listen: 'Healthy scepticism about new technology in field operations is appropriate.',
+              acknowledge: 'Field service is mission-critical — any new tool needs to prove value before scaling.',
+              explore: [
+                'What would a successful pilot look like for your Service division — what metrics would convince you?',
+                'Have your technicians used any AI-assisted tools before, even in adjacent workflows?',
+              ],
+              respond: [
+                'The pilot is milestone-gated: 50 technicians, 8 weeks, with a week-4 go/no-go checkpoint.',
+                'We measure first-time-fix rate improvement — a metric your Service division already tracks.',
+                'If the pilot doesn\'t meet agreed KPIs, the go/no-go gate prevents further investment.',
+              ],
+            },
+            proof_anchors: ['Milestone-gated pilot design', 'First-time-fix rate benchmarking'],
+            aligned_driver_ids: ['sig-sch-copilot-field'],
+          },
+          {
+            title: 'We prefer to work with our existing cloud partner',
+            preview: 'This engagement complements existing relationships — FinOps + AI is a specialised capability gap.',
+            laer: {
+              listen: 'Existing partner relationships represent significant institutional knowledge.',
+              acknowledge: 'Continuity with trusted partners is valuable and we respect that.',
+              explore: [
+                'Does your current partner have a dedicated FinOps practice with Azure AI delivery credentials?',
+              ],
+              respond: [
+                'We don\'t displace existing partners — we fill the FinOps + AI capability gap that generalist partners rarely cover.',
+                'The assessment is a standalone engagement that produces value regardless of who delivers the next phase.',
+              ],
+            },
+          },
         ],
       },
       open_questions: [
@@ -394,6 +556,78 @@ function buildPackages(): BusinessPlayPackage[] {
           'Prepare an Azure Policy demo showing automated enforcement of data-residency and model-access rules.',
           'Know the ISO 42001 control structure — map it to Azure Defender and Purview capabilities.',
           'Have a reference architecture for governance-as-code on Azure Swiss North ready.',
+        ],
+      },
+      objection_handling: {
+        objections: [
+          {
+            title: 'We already have a compliance team — why do we need a framework?',
+            preview: 'Compliance teams handle reviews; the framework automates repeatable policy enforcement.',
+            laer: {
+              listen: 'Having a dedicated compliance team is a sign of organisational maturity.',
+              acknowledge: 'Your compliance team is essential — a framework amplifies their capacity, not replaces it.',
+              explore: [
+                'How many hours does your compliance team spend per AI workload review today?',
+                'Is the current process repeatable, or does each review start from scratch?',
+              ],
+              respond: [
+                'The framework automates standard-risk approvals so your compliance team focuses on high-risk exceptions.',
+                'Each review today costs CHF 50-80K — the framework reduces marginal review cost to near zero.',
+                'Your team retains full oversight; they approve the framework rules, not individual workloads.',
+              ],
+            },
+            proof_anchors: ['Governance-as-code automation model', 'Compliance team capacity analysis'],
+          },
+          {
+            title: 'EU AI Act deadlines are uncertain — why invest now?',
+            preview: 'Framework readiness takes 6-12 months; waiting creates a compliance scramble.',
+            laer: {
+              listen: 'Regulatory timelines do shift — that uncertainty is real.',
+              acknowledge: 'Investing ahead of confirmed deadlines requires a clear business case.',
+              explore: [
+                'If the EU AI Act enforcement date is confirmed for 2025/2026, would your current governance model be audit-ready?',
+              ],
+              respond: [
+                'Building a governance framework takes 6-12 months to mature — starting now avoids a compliance scramble.',
+                'The framework delivers value today through faster AI deployment, independent of regulatory timing.',
+                'Early movers gain competitive advantage — governance readiness becomes a customer trust signal.',
+              ],
+            },
+            proof_anchors: ['EU AI Act implementation timeline', 'Governance maturity curve'],
+          },
+          {
+            title: 'Governance will slow down our AI innovation',
+            preview: 'Automated governance accelerates deployment — from 6 weeks to under 5 days per workload.',
+            laer: {
+              listen: 'Speed of innovation is critical — governance should not become a bottleneck.',
+              acknowledge: 'Poorly designed governance does slow teams down — that concern is valid.',
+              explore: [
+                'How long does it currently take to get an AI workload from pilot approval to production deployment?',
+              ],
+              respond: [
+                'Our framework reduces approval from 4-6 weeks to under 5 business days for standard-risk workloads.',
+                'Governance-as-code runs automatically — no manual review queue, no waiting for committee meetings.',
+                'Teams that deploy governance early actually ship more AI use cases, not fewer.',
+              ],
+            },
+            proof_anchors: ['Approval cycle benchmarking', 'Governance-as-code deployment model'],
+          },
+          {
+            title: 'We want to wait until we have more AI workloads before standardising',
+            preview: 'Retrofitting governance across many workloads is 3-5x more expensive than building it early.',
+            laer: {
+              listen: 'Standardising too early can feel premature if the workload portfolio is small.',
+              acknowledge: 'It makes sense to question whether the investment is justified at current scale.',
+              explore: [
+                'How many AI use cases are in your 12-month pipeline? Would each one require its own governance review?',
+              ],
+              respond: [
+                'Retrofitting governance across 10+ workloads is 3-5x more expensive than embedding it from the start.',
+                'The framework scales automatically — the cost of adding workload #10 is near zero once the framework exists.',
+                'Starting with 2-3 pilot workloads proves the model before you scale.',
+              ],
+            },
+          },
         ],
       },
       open_questions: [
@@ -525,6 +759,98 @@ function buildPackages(): BusinessPlayPackage[] {
           'Review Schindler\'s published SOC and compliance documentation before discovery.',
           'Prepare a demo showing Azure Policy enforcement for AI workloads with SOC alert integration.',
           'Know the ISO 42001 control mapping to Azure Defender and Purview — be ready to walk through it.',
+        ],
+      },
+      objection_handling: {
+        objections: [
+          {
+            title: 'Our RACI model already covers AI governance',
+            preview: 'RACI defines roles; it does not automate policy enforcement or risk classification.',
+            laer: {
+              listen: 'Your RACI model is well-established — it clearly defines accountability.',
+              acknowledge: 'RACI is a strong foundation and we build on it rather than replace it.',
+              explore: [
+                'Does your current RACI model include AI-specific roles like model owner or data steward?',
+                'How are AI workloads classified by risk tier within the existing framework?',
+              ],
+              respond: [
+                'RACI defines who is responsible — governance-as-code defines what is automatically enforced.',
+                'We extend your RACI with AI-specific roles and automated policy gates — same culture, new capability.',
+                'Without automated enforcement, each AI workload still requires manual review against the RACI matrix.',
+              ],
+            },
+            proof_anchors: ['RACI-to-AI governance mapping', 'Azure Policy automation model'],
+            aligned_driver_ids: ['sig-sch-ai-governance'],
+          },
+          {
+            title: 'Our SOC cannot absorb more monitoring scope',
+            preview: 'AI governance events flow through existing Azure Defender — no new tooling or console.',
+            laer: {
+              listen: 'SOC capacity is finite — adding scope without resources is a real concern.',
+              acknowledge: 'Your 24/7 SOC team is already managing a significant monitoring surface.',
+              explore: [
+                'What percentage of SOC alerts today are actionable vs. noise?',
+              ],
+              respond: [
+                'AI governance events integrate into your existing Azure Defender console — no new tool, no new dashboard.',
+                'Policy-as-code reduces alert noise by preventing non-compliant deployments before they trigger alerts.',
+                'We size the monitoring overlay to add <5% to current SOC alert volume.',
+              ],
+            },
+            proof_anchors: ['SOC integration architecture', 'Alert volume impact analysis'],
+            aligned_driver_ids: ['sig-sch-ai-governance'],
+          },
+          {
+            title: 'ISO 42001 certification is not on our roadmap',
+            preview: 'The framework aligns to ISO 42001 controls regardless of certification intent — it is a best-practice baseline.',
+            laer: {
+              listen: 'Not every organisation needs formal certification — business context matters.',
+              acknowledge: 'Certification is a strategic decision that depends on customer and regulatory requirements.',
+              explore: [
+                'Do your enterprise customers or regulators ask about AI governance maturity in procurement or audit processes?',
+              ],
+              respond: [
+                'The framework uses ISO 42001 controls as a best-practice baseline — you get the benefit without committing to certification.',
+                'If certification becomes relevant later, you are already 80% of the way there.',
+                'Governance maturity is increasingly a competitive differentiator in enterprise sales.',
+              ],
+            },
+            proof_anchors: ['ISO 42001 control framework', 'Enterprise customer governance expectations'],
+          },
+          {
+            title: 'We tried governance automation before and it was too rigid',
+            preview: 'Policy-as-code supports exception paths — standard-risk is automated, high-risk gets human review.',
+            laer: {
+              listen: 'Past experience with rigid automation creates justified caution.',
+              acknowledge: 'Governance automation that blocks legitimate work is worse than no automation.',
+              explore: [
+                'What specifically caused rigidity in the previous approach — was it the rules, the tooling, or the exception process?',
+              ],
+              respond: [
+                'Our framework separates standard-risk (automated fast-track) from high-risk (human review) — it is not all-or-nothing.',
+                'Exception paths are built in — teams can request expedited review for edge cases without bypassing controls.',
+                'Policy rules are version-controlled and auditable — your team can adjust thresholds as they learn.',
+              ],
+            },
+            aligned_driver_ids: ['sig-sch-ai-governance'],
+          },
+          {
+            title: 'Legal should lead AI governance, not a technology partner',
+            preview: 'Legal defines policy intent; the technology partner implements enforcement and monitoring.',
+            laer: {
+              listen: 'Legal ownership of governance policy is appropriate and expected.',
+              acknowledge: 'Policy intent must come from legal and compliance — technology partners should not define policy.',
+              explore: [
+                'Does your legal team have the Azure-specific technical depth to implement policy enforcement in the cloud platform?',
+              ],
+              respond: [
+                'Legal defines the rules; we implement automated enforcement in Azure — each team plays to its strength.',
+                'Our deliverable includes policy documentation in legal-readable format alongside technical implementation.',
+                'The framework gives legal real-time compliance visibility without requiring them to learn Azure tooling.',
+              ],
+            },
+            proof_anchors: ['Legal-technical collaboration model', 'Policy documentation templates'],
+          },
         ],
       },
       open_questions: [

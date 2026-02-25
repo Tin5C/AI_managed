@@ -417,7 +417,7 @@ export function RecommendedPlaysPanel({
             <div className="border-t border-border/40 pt-3 space-y-2">
               <p className="text-xs font-semibold text-foreground">{selectedPlay.packName}</p>
               <p className="text-[11px] text-muted-foreground">
-                {selectedPlay.drivers.length} signal{selectedPlay.drivers.length !== 1 ? 's' : ''}
+                {displaySignalCount} signal{displaySignalCount !== 1 ? 's' : ''}
                 {' · '}
                 {trendsTitlesForScoring.length} trend{trendsTitlesForScoring.length !== 1 ? 's' : ''}
                 {' · '}

@@ -398,13 +398,21 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
     return getActiveSignalIds(selectedAccount);
   }, [selectedAccount, showPicker]);
 
+  const [driversExpanded, setDriversExpanded] = useState(false);
+  const [shakeDrivers, setShakeDrivers] = useState(false);
+  const INITIAL_DRIVER_COUNT = 4;
+
   const handleToggleDriver = useCallback((signalId: string) => {
     if (!selectedAccount) return;
     const current = getActiveSignalIds(selectedAccount);
     if (current.includes(signalId)) {
       setActiveSignals(selectedAccount, current.filter(id => id !== signalId));
     } else {
-      if (current.length >= 3) { toast.error('Max 3 drivers selected'); return; }
+      if (current.length >= 3) {
+        setShakeDrivers(true);
+        setTimeout(() => setShakeDrivers(false), 500);
+        return;
+      }
       setActiveSignals(selectedAccount, [...current, signalId]);
     }
     refresh();
@@ -710,27 +718,45 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
         <div className="flex-1 min-w-0 space-y-4">
 
           {/* ===== DRIVER SELECTION ===== */}
-          <div className="rounded-xl border border-border/50 bg-muted/[0.03] p-4 space-y-3">
-            <p className="text-xs font-semibold text-foreground">What matters most in this account?</p>
-            <div className="flex flex-wrap gap-2">
-              {driverOptions.map((d) => {
+          <div className="rounded-xl border border-border/50 bg-muted/[0.03] p-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-foreground">What matters most in this account?</p>
+              <span className="text-[10px] tabular-nums text-muted-foreground">
+                Selected: <span className={cn('font-semibold', selectedDriverIds.length > 0 && 'text-primary')}>{selectedDriverIds.length}</span> / 3
+              </span>
+            </div>
+            <div className={cn('flex flex-wrap gap-x-2.5 gap-y-2', shakeDrivers && 'animate-[shake_0.4s_ease-in-out]')}>
+              {(driversExpanded ? driverOptions : driverOptions.slice(0, INITIAL_DRIVER_COUNT)).map((d) => {
                 const isActive = selectedDriverIds.includes(d.id);
                 return (
                   <button
                     key={d.id}
                     onClick={() => handleToggleDriver(d.id)}
                     className={cn(
-                      'px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all',
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-150',
                       isActive
-                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.08)] scale-[1.02]'
                         : 'bg-muted/30 text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground',
                     )}
                   >
+                    {isActive && <Check className="w-3 h-3" />}
                     {d.title}
                   </button>
                 );
               })}
             </div>
+            {driverOptions.length > INITIAL_DRIVER_COUNT && (
+              <button
+                onClick={() => setDriversExpanded(!driversExpanded)}
+                className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground font-medium transition-colors"
+              >
+                {driversExpanded ? (
+                  <><ChevronDown className="w-3 h-3" /> Show fewer</>
+                ) : (
+                  <><Plus className="w-3 h-3" /> Explore more drivers</>
+                )}
+              </button>
+            )}
             {!showContextInput ? (
               <button
                 onClick={() => setShowContextInput(true)}

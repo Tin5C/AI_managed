@@ -84,7 +84,7 @@ import { WhatWeNeedSection } from '@/partner/components/dealPlanning/WhatWeNeedS
 import { ExecutionBundleSection } from '@/partner/components/dealPlanning/ExecutionBundleSection';
 import { DealHypothesisBlock } from '@/partner/components/dealPlanning/DealHypothesisBlock';
 import { RisksBlockersSection } from '@/partner/components/dealPlanning/RisksBlockersSection';
-import { getReadinessScore, addMemoryItem } from '@/data/partner/accountMemoryStore';
+import { getReadinessScore } from '@/data/partner/accountMemoryStore';
 import { buildComposerInputBusiness } from '@/services/partner/dealPlanning/buildComposerInputBusiness';
 import { getActiveSignalIds, setActiveSignals, addActiveSignal } from '@/partner/data/dealPlanning/activeSignalsStore';
 import { consumeDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
@@ -400,7 +400,10 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
 
   const [driversExpanded, setDriversExpanded] = useState(false);
   const [shakeDrivers, setShakeDrivers] = useState(false);
+  const [customDrivers, setCustomDrivers] = useState<{ id: string; label: string }[]>([]);
   const INITIAL_DRIVER_COUNT = 4;
+
+  const totalSelected = selectedDriverIds.length + customDrivers.length;
 
   const handleToggleDriver = useCallback((signalId: string) => {
     if (!selectedAccount) return;
@@ -408,7 +411,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
     if (current.includes(signalId)) {
       setActiveSignals(selectedAccount, current.filter(id => id !== signalId));
     } else {
-      if (current.length >= 3) {
+      if (current.length + customDrivers.length >= 3) {
         setShakeDrivers(true);
         setTimeout(() => setShakeDrivers(false), 500);
         return;
@@ -416,7 +419,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
       setActiveSignals(selectedAccount, [...current, signalId]);
     }
     refresh();
-  }, [selectedAccount, refresh]);
+  }, [selectedAccount, refresh, customDrivers.length]);
 
   const KEYWORD_BOOST: Record<string, string[]> = {
     play_governance: ['policy', 'governance', 'approval', 'residency', 'compliance', 'regulation'],
@@ -425,15 +428,12 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
 
   const handleSubmitContext = useCallback(() => {
     if (!selectedAccount || !contextText.trim()) return;
+    if (totalSelected >= 3) {
+      setShakeDrivers(true);
+      setTimeout(() => setShakeDrivers(false), 500);
+      return;
+    }
     const words = contextText.toLowerCase();
-    const titlePreview = contextText.trim().split(/\s+/).slice(0, 6).join(' ');
-    addMemoryItem({
-      account_id: selectedAccount,
-      type: 'other' as const,
-      title: `Specific context – ${titlePreview}`,
-      content_text: contextText,
-      tags: ['pillar:technical', 'tag:custom-context'],
-    });
     const boosts: Record<string, number> = {};
     for (const [playId, keywords] of Object.entries(KEYWORD_BOOST)) {
       if (keywords.some(kw => words.includes(kw))) {
@@ -445,11 +445,13 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
       for (const [k, v] of Object.entries(boosts)) merged[k] = (merged[k] ?? 0) + v;
       return merged;
     });
+    const id = `custom_${Date.now()}`;
+    const label = contextText.trim().length > 40 ? contextText.trim().slice(0, 40) + '…' : contextText.trim();
+    setCustomDrivers(prev => [...prev, { id, label }]);
     setContextText('');
     setShowContextInput(false);
     refresh();
-    toast.success('Context added');
-  }, [selectedAccount, contextText, refresh]);
+  }, [selectedAccount, contextText, totalSelected, refresh]);
 
   // Strategic Framing details
   const [showStrategicDetails, setShowStrategicDetails] = useState(false);
@@ -722,16 +724,17 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-foreground">What matters most in this account?</p>
               <span className="text-[10px] tabular-nums text-muted-foreground">
-                Selected: <span className={cn('font-semibold', selectedDriverIds.length > 0 && 'text-primary')}>{selectedDriverIds.length}</span> / 3
+                Selected: <span className={cn('font-semibold', totalSelected > 0 && 'text-primary')}>{totalSelected}</span> / 3
               </span>
             </div>
             <div className={cn('flex flex-wrap gap-x-2.5 gap-y-2', shakeDrivers && 'animate-[shake_0.4s_ease-in-out]')}>
               {(driversExpanded ? driverOptions : driverOptions.slice(0, INITIAL_DRIVER_COUNT)).map((d) => {
-                const isActive = selectedDriverIds.includes(d.id);
+                const driverId = d.id;
+                const isActive = selectedDriverIds.includes(driverId);
                 return (
                   <button
-                    key={d.id}
-                    onClick={() => handleToggleDriver(d.id)}
+                    key={driverId}
+                    onClick={() => handleToggleDriver(driverId)}
                     className={cn(
                       'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-150',
                       isActive
@@ -744,6 +747,23 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                   </button>
                 );
               })}
+              {/* Custom one-off driver chips */}
+              {customDrivers.map((cd) => (
+                <span
+                  key={cd.id}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-primary text-primary-foreground border border-primary shadow-[0_2px_8px_rgba(0,0,0,0.08)] scale-[1.02]"
+                >
+                  <Check className="w-3 h-3" />
+                  {cd.label}
+                  <span className="ml-0.5 px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/20 font-medium">Custom</span>
+                  <button
+                    onClick={() => setCustomDrivers(prev => prev.filter(c => c.id !== cd.id))}
+                    className="ml-0.5 hover:opacity-70 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
             </div>
             {driverOptions.length > INITIAL_DRIVER_COUNT && (
               <button
@@ -758,13 +778,16 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
               </button>
             )}
             {!showContextInput ? (
-              <button
-                onClick={() => setShowContextInput(true)}
-                className="flex items-center gap-1.5 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                Add specific context
-              </button>
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => setShowContextInput(true)}
+                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground font-medium transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add one-off driver
+                </button>
+                <p className="text-[9px] text-muted-foreground/60 pl-[18px]">Applies to this plan only. Not saved to Account Intelligence.</p>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <input
@@ -772,8 +795,8 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                   value={contextText}
                   onChange={(e) => setContextText(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleSubmitContext(); }}
-                  placeholder="Describe a specific constraint, risk, or opportunity..."
-                  className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-border bg-background focus:border-primary/40 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
+                  placeholder="e.g., Procurement is blocking approval unless unit cost is capped…"
+                  className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-border/60 bg-muted/10 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
                   autoFocus
                 />
                 <button

@@ -481,15 +481,27 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
     });
   }, [selectedAccount, engagementType, motion, planGenerated, inboxVersion]);
 
+  // Effective drivers: strict single-signal override when Quick Brief focus is active
+  const effectiveDrivers = useMemo(() => {
+    if (!focusSignal) return drivers;
+    const filtered = drivers.filter((d) => d.signalId === focusSignal.id);
+    return filtered.length > 0 ? filtered : drivers; // fallback avoids empty input
+  }, [focusSignal, drivers]);
+
+  const effectiveSignalIds = useMemo(() => {
+    if (focusSignal) return [focusSignal.id];
+    return selectedAccount ? getActiveSignalIds(selectedAccount) : [];
+  }, [focusSignal, selectedAccount, drivers, showPicker]);
+
   const topPlayPackName = useMemo(() => {
-    if (drivers.length === 0) return null;
+    if (effectiveDrivers.length === 0) return null;
     const plays = scorePlayPacks(PLAY_SERVICE_PACKS, {
-      promotedSignals: drivers,
+      promotedSignals: effectiveDrivers,
       engagementType: engagementType as 'new_logo' | 'existing_customer' | null,
       motion,
     });
     return plays.length > 0 ? plays[0].packName : null;
-  }, [drivers, engagementType, motion]);
+  }, [effectiveDrivers, engagementType, motion]);
 
   const handleAddSignals = useCallback((signals: Signal[]) => {
     if (!selectedAccount) return;
@@ -962,7 +974,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                         playId: activePlay?.playId ?? '',
                         type: engagementType ?? '',
                         motion: motion ?? '',
-                        activeSignalIds: getActiveSignalIds(selectedAccount),
+                        activeSignalIds: effectiveSignalIds,
                       });
                       const json = JSON.stringify(input, null, 2);
                       try {

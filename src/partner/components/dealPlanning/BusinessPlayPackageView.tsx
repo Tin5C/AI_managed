@@ -689,9 +689,6 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground/70 italic leading-snug mt-1">
-            {POV_SUPPORT[activePov]}
-          </p>
         </SectionCard>
 
         {/* Card C — Plan */}

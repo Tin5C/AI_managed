@@ -63,11 +63,7 @@ import {
 } from '@/data/partner/dealPlanStore';
 import { listSignals, type Signal } from '@/data/partner/signalStore';
 import { AccountInbox } from './AccountInbox';
-import {
-  DealPlanMetadata,
-  type EngagementType,
-  type Motion,
-} from './DealPlanMetadata';
+import type { EngagementType, Motion } from './DealPlanMetadata';
 import { scoreServicePacks, type ScoredPack } from '@/data/partner/servicePackStore';
 import { partner_service_configuration } from '@/data/partner/partnerServiceConfiguration';
 import {
@@ -88,7 +84,7 @@ import { WhatWeNeedSection } from '@/partner/components/dealPlanning/WhatWeNeedS
 import { ExecutionBundleSection } from '@/partner/components/dealPlanning/ExecutionBundleSection';
 import { DealHypothesisBlock } from '@/partner/components/dealPlanning/DealHypothesisBlock';
 import { RisksBlockersSection } from '@/partner/components/dealPlanning/RisksBlockersSection';
-import { getReadinessScore } from '@/data/partner/accountMemoryStore';
+import { getReadinessScore, addMemoryItem } from '@/data/partner/accountMemoryStore';
 import { buildComposerInputBusiness } from '@/services/partner/dealPlanning/buildComposerInputBusiness';
 import { getActiveSignalIds, setActiveSignals, addActiveSignal } from '@/partner/data/dealPlanning/activeSignalsStore';
 import { consumeDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
@@ -100,7 +96,7 @@ import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
 import { TechnicalPlayPackView } from '@/partner/components/dealPlanning/TechnicalPlayPackView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
-import { getDealPlanningSelection, getEntryMode, setEntryMode, getCustomerProblem, setCustomerProblem, getSelectionContext, type EntryMode } from '@/data/partner/dealPlanningSelectionStore';
+import { getDealPlanningSelection, getSelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 
 const WEEK_OF = '2026-02-10';
 
@@ -372,20 +368,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [engagementType, setEngagementType] = useState<EngagementType | null>(null);
   const [motion, setMotion] = useState<Motion | null>(null);
 
-  // Entry mode state (guided vs problem-first)
-  const [entryMode, setEntryModeLocal] = useState<EntryMode>('guided');
-  const [customerProblem, setCustomerProblemLocal] = useState('');
-
-  const handleEntryModeChange = useCallback((mode: EntryMode) => {
-    setEntryModeLocal(mode);
-    if (selectedAccount) setEntryMode(selectedAccount, mode);
-  }, [selectedAccount]);
-
-  const handleCustomerProblemChange = useCallback((text: string) => {
-    setCustomerProblemLocal(text);
-    if (selectedAccount) setCustomerProblem(selectedAccount, text);
-  }, [selectedAccount]);
-
   // Apply preselected type/motion when account changes
   useEffect(() => {
     if (!selectedAccount) return;
@@ -393,10 +375,73 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
     if (sel) {
       setEngagementType(sel.type as EngagementType);
       setMotion(sel.motion as Motion);
-      setEntryModeLocal(sel.entryMode ?? 'guided');
-      setCustomerProblemLocal(sel.customerProblem ?? '');
     }
   }, [selectedAccount]);
+
+  // Auto-generate plan when account is selected
+  useEffect(() => {
+    if (selectedAccount) setPlanGenerated(true);
+  }, [selectedAccount]);
+
+  // Driver selection + specific context state
+  const [contextBoosts, setContextBoosts] = useState<Record<string, number>>({});
+  const [showContextInput, setShowContextInput] = useState(false);
+  const [contextText, setContextText] = useState('');
+
+  const driverOptions = useMemo(() => {
+    if (!selectedAccount) return [];
+    return buildSignalPool(selectedAccount, WEEK_OF).map(s => ({ id: s.id, title: s.title }));
+  }, [selectedAccount]);
+
+  const selectedDriverIds = useMemo(() => {
+    if (!selectedAccount) return [] as string[];
+    return getActiveSignalIds(selectedAccount);
+  }, [selectedAccount, showPicker]);
+
+  const handleToggleDriver = useCallback((signalId: string) => {
+    if (!selectedAccount) return;
+    const current = getActiveSignalIds(selectedAccount);
+    if (current.includes(signalId)) {
+      setActiveSignals(selectedAccount, current.filter(id => id !== signalId));
+    } else {
+      if (current.length >= 3) { toast.error('Max 3 drivers selected'); return; }
+      setActiveSignals(selectedAccount, [...current, signalId]);
+    }
+    refresh();
+  }, [selectedAccount, refresh]);
+
+  const KEYWORD_BOOST: Record<string, string[]> = {
+    play_governance: ['policy', 'governance', 'approval', 'residency', 'compliance', 'regulation'],
+    play_finops: ['cost', 'budget', 'variance', 'finops', 'telemetry', 'usage', 'spend'],
+  };
+
+  const handleSubmitContext = useCallback(() => {
+    if (!selectedAccount || !contextText.trim()) return;
+    const words = contextText.toLowerCase();
+    const titlePreview = contextText.trim().split(/\s+/).slice(0, 6).join(' ');
+    addMemoryItem({
+      account_id: selectedAccount,
+      type: 'other' as const,
+      title: `Specific context – ${titlePreview}`,
+      content_text: contextText,
+      tags: ['pillar:technical', 'tag:custom-context'],
+    });
+    const boosts: Record<string, number> = {};
+    for (const [playId, keywords] of Object.entries(KEYWORD_BOOST)) {
+      if (keywords.some(kw => words.includes(kw))) {
+        boosts[playId] = (boosts[playId] ?? 0) + 10;
+      }
+    }
+    setContextBoosts(prev => {
+      const merged = { ...prev };
+      for (const [k, v] of Object.entries(boosts)) merged[k] = (merged[k] ?? 0) + v;
+      return merged;
+    });
+    setContextText('');
+    setShowContextInput(false);
+    refresh();
+    toast.success('Context added');
+  }, [selectedAccount, contextText, refresh]);
 
   // Strategic Framing details
   const [showStrategicDetails, setShowStrategicDetails] = useState(false);
@@ -451,7 +496,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [composerFallbackJson, setComposerFallbackJson] = useState<string | null>(null);
   const [businessVariant, setBusinessVariant] = useState<BusinessVariant>('executive');
   const [technicalVariant, setTechnicalVariant] = useState<'executive' | 'grounded'>('executive');
-  const canGenerate = selectedAccount !== null && (entryMode === 'problem' ? customerProblem.trim().length > 0 : (engagementType !== null && motion !== null));
+  // canGenerate removed — plan auto-generates when account is selected
 
   const [inboxVersion, setInboxVersion] = useState(0);
   const inboxItems = useMemo(
@@ -566,79 +611,11 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
       <div className="flex items-center gap-2">
         <Brain className="w-5 h-5 text-primary" />
         <h3 className="text-base font-semibold text-foreground">Deal Planning</h3>
-        {avgConfidence && (
-          <span className={cn('text-xs font-bold ml-1', confidenceColor(avgConfidence.score))}>
-            {avgConfidence.score}% avg
-          </span>
-        )}
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Account</span>
-          <AccountSelector selectedId={selectedAccount} onSelect={setSelectedAccount} />
-        </div>
-
-        {/* Entry mode toggle */}
-        <div className="inline-flex rounded-md bg-muted/50 p-0.5 border border-border/60">
-          {(['guided', 'problem'] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => handleEntryModeChange(mode)}
-              className={cn(
-                'px-2.5 py-1 rounded text-[10px] font-medium transition-all capitalize',
-                entryMode === mode
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {mode === 'guided' ? 'Guided' : 'Problem-first'}
-            </button>
-          ))}
-        </div>
-
-        {/* Guided: Type + Motion dropdowns */}
-        {entryMode === 'guided' && (
-          <DealPlanMetadata
-            accountId={selectedAccount ?? ''}
-            hasPromotedSignals={drivers.length > 0}
-            engagementType={engagementType}
-            onEngagementTypeChange={setEngagementType}
-            motion={motion}
-            onMotionChange={setMotion}
-            showNextAdds={false}
-          />
-        )}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Account</span>
+        <AccountSelector selectedId={selectedAccount} onSelect={setSelectedAccount} />
       </div>
-
-      {/* Problem-first: text input */}
-      {entryMode === 'problem' && (
-        <div className="space-y-1 max-w-lg">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-            Customer problem
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={customerProblem}
-              onChange={(e) => handleCustomerProblemChange(e.target.value)}
-              placeholder="e.g. Legacy on-prem systems can't scale for AI workloads..."
-              className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-border bg-background focus:border-primary/40 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
-            />
-            {customerProblem.trim().length > 0 && (
-              <button
-                type="button"
-                onClick={() => handleCustomerProblemChange('')}
-                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors"
-              >
-                <X className="w-3 h-3" /> Clear
-              </button>
-            )}
-          </div>
-          <p className="text-[10px] text-muted-foreground/70 italic">
-            Frames recommendations; does not change scoring.
-          </p>
-        </div>
-      )}
     </div>
   );
 
@@ -724,33 +701,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
         </p>
       )}
 
-      {/* Generate Plan CTA */}
-      {!planGenerated && (
-        <div className="flex flex-col items-center gap-3 py-4">
-          <button
-            onClick={() => setPlanGenerated(true)}
-            disabled={!canGenerate}
-            className={cn(
-              'w-full max-w-md inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all',
-              canGenerate
-                ? 'bg-primary text-primary-foreground shadow-soft hover:bg-primary/90 hover:shadow-card active:scale-[0.98]'
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
-            )}
-          >
-            <Rocket className="w-4.5 h-4.5" />
-            Generate Plan
-          </button>
-          {!canGenerate && (
-            <p className="text-[11px] text-muted-foreground text-center">
-              {!selectedAccount
-                ? 'Select an account to generate the plan.'
-                : entryMode === 'problem'
-                  ? 'Describe a customer problem to generate the plan.'
-                  : 'Select Engagement Type and Motion to generate the plan.'}
-            </p>
-          )}
-        </div>
-      )}
+      {/* Generate Plan removed — auto-generates when account is selected */}
 
       {/* Plan workspace */}
       {planGenerated && (<>
@@ -758,23 +709,68 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
         {/* Main workspace (full-width — right rail removed) */}
         <div className="flex-1 min-w-0 space-y-4">
 
-          {/* ===== Problem-first focus pill ===== */}
-          {entryMode === 'problem' && customerProblem.trim().length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/[0.06] border border-primary/20">
-              <Crosshair className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-              <p className="text-[11px] text-foreground flex-1">
-                <span className="font-medium text-primary">Focused from problem:</span>{' '}
-                <span className="text-muted-foreground">{customerProblem}</span>
-              </p>
-              <button
-                type="button"
-                onClick={() => handleCustomerProblemChange('')}
-                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors flex-shrink-0"
-              >
-                <X className="w-3 h-3" /> Clear
-              </button>
+          {/* ===== DRIVER SELECTION ===== */}
+          <div className="rounded-xl border border-border/50 bg-muted/[0.03] p-4 space-y-3">
+            <p className="text-xs font-semibold text-foreground">What matters most in this account?</p>
+            <div className="flex flex-wrap gap-2">
+              {driverOptions.map((d) => {
+                const isActive = selectedDriverIds.includes(d.id);
+                return (
+                  <button
+                    key={d.id}
+                    onClick={() => handleToggleDriver(d.id)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all',
+                      isActive
+                        ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                        : 'bg-muted/30 text-muted-foreground border-border/60 hover:border-primary/30 hover:text-foreground',
+                    )}
+                  >
+                    {d.title}
+                  </button>
+                );
+              })}
             </div>
-          )}
+            {!showContextInput ? (
+              <button
+                onClick={() => setShowContextInput(true)}
+                className="flex items-center gap-1.5 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                Add specific context
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={contextText}
+                  onChange={(e) => setContextText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSubmitContext(); }}
+                  placeholder="Describe a specific constraint, risk, or opportunity..."
+                  className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-border bg-background focus:border-primary/40 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSubmitContext}
+                  disabled={!contextText.trim()}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all',
+                    contextText.trim()
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed',
+                  )}
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => { setShowContextInput(false); setContextText(''); }}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* ===== SHARED HERO: Recommended Plays ===== */}
           <RecommendedPlaysPanel
@@ -793,7 +789,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             focusSignal={focusSignal}
             onClearFocus={() => {
               setFocusSignal(null);
-              // Restore default active signals after clearing focus
               if (selectedAccount) {
                 const currentIds = getActiveSignalIds(selectedAccount);
                 if (currentIds.length <= 1) {
@@ -807,6 +802,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             onClearTrendFocus={() => setFocusTrend(null)}
             initialOpenEvidence={initialOpenEvidence}
             onEvidenceDrawerOpened={() => setInitialOpenEvidence(false)}
+            scoreBoosts={contextBoosts}
             pickerNode={
               showPicker ? (
                 <SignalPickerPanel

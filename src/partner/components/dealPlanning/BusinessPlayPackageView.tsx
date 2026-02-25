@@ -7,6 +7,17 @@ import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/busine
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import type { SelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 import { getSignal } from '@/data/partner/signalStore';
+import {
+  type PovMode,
+  deriveDefaultPov,
+  reorderKpis,
+  reorderObjections,
+  reorderDeliverySections,
+  reorderTalkTracks,
+  POV_FRAMING,
+  POV_LABELS,
+  type DeliverySection,
+} from './buildPovOrdering';
 import { getByFocusId as getTrendPack } from '@/data/partner/industryAuthorityTrendsStore';
 import { getByFocusId as getInitiativesPack } from '@/data/partner/publicInitiativesStore';
 import {
@@ -159,8 +170,10 @@ function classifyPersona(persona: string): string {
 interface TalkTrackItem { persona: string; message: string; }
 interface DiscoveryItem { theme: string; question: string; }
 
-function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [] }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[]; driverLabels?: string[] }) {
-  const grouped = talkTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
+function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], activePov }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[]; driverLabels?: string[]; activePov?: PovMode }) {
+  // Reorder talk tracks by POV if active
+  const orderedTracks = useMemo(() => activePov ? reorderTalkTracks(talkTracks, activePov) : talkTracks, [talkTracks, activePov]);
+  const grouped = orderedTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
     const key = classifyPersona(tt.persona);
     (acc[key] ??= []).push(tt);
     return acc;
@@ -429,6 +442,63 @@ function ObjectionLAERAccordion({ objections }: { objections: import('@/data/par
     </div>
   );
 }
+/* ── Delivery Assets Accordion (POV-ordered) ── */
+
+function DeliveryAssetsAccordionOrdered({ deliveryAssets, order }: {
+  deliveryAssets: {
+    discovery_agenda: { theme: string; question: string }[];
+    workshop_plan: { step: string; description: string }[];
+    pilot_scope: { in_scope: string[]; out_of_scope: string[]; deliverables: string[]; stakeholders: string[] };
+  };
+  order: DeliverySection[];
+}) {
+  const sections: Record<DeliverySection, React.ReactNode> = {
+    discovery: (
+      <div className="space-y-1" key="discovery">
+        <Label>Discovery Agenda</Label>
+        {deliveryAssets.discovery_agenda.slice(0, 5).map((d, i) => (
+          <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+            <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
+            <span><span className="font-medium text-foreground">{d.theme}:</span> {d.question}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    workshop: (
+      <div className="space-y-1" key="workshop">
+        <Label>Workshop Plan</Label>
+        {deliveryAssets.workshop_plan.map((w, i) => (
+          <div key={i} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-snug">
+            <span className="text-[10px] font-bold text-primary/60 mt-0.5 flex-shrink-0">{i + 1}.</span>
+            <span><span className="font-medium text-foreground">{w.step}:</span> {w.description}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    pilot: (
+      <div className="space-y-1" key="pilot">
+        <Label>Pilot Scope</Label>
+        <div className="text-[10px] text-muted-foreground space-y-0.5">
+          {deliveryAssets.pilot_scope.in_scope.slice(0, 3).map((s, i) => (
+            <div key={i} className="flex items-start gap-1.5">
+              <ChevronRight className="w-2.5 h-2.5 text-primary/40 mt-0.5 flex-shrink-0" />
+              <span>{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  };
+
+  return (
+    <CollapsibleSection title="Delivery assets" subtitle="Discovery, workshop, pilot scope" defaultOpen={false}>
+      <div className="space-y-2">
+        {order.map((key) => sections[key])}
+      </div>
+    </CollapsibleSection>
+  );
+}
+
 /* ── Delivery Assets Accordion ── */
 
 function DeliveryAssetsAccordion({ deliveryAssets }: {
@@ -470,6 +540,19 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
   const b = pkg.business;
   const [supportOpen, setSupportOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+
+  // ── POV mode ──
+  const signalIds = useMemo(() => selectionContext?.basedOn.signals ?? [], [selectionContext]);
+  const defaultPov = useMemo(() => deriveDefaultPov(signalIds), [signalIds]);
+  const [activePov, setActivePov] = useState<PovMode>(defaultPov);
+
+  // Recompute reordered content
+  const kpiResult = useMemo(() => reorderKpis(b.commercial_assets.kpis, activePov), [b.commercial_assets.kpis, activePov]);
+  const objectionResult = useMemo(() => {
+    const objections = b.objection_handling?.objections ?? [];
+    return reorderObjections(objections, activePov);
+  }, [b.objection_handling, activePov]);
+  const deliveryOrder = useMemo(() => reorderDeliverySections(activePov), [activePov]);
 
   const citationCount = b.signal_citation_ids?.length ?? 0;
 
@@ -640,33 +723,73 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
       {/* ── Divider ── */}
       <div className="border-t border-border/40 pt-3 mt-1" />
 
+      {/* ── POV Mode Chips ── */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Point of View</span>
+          <div className="inline-flex rounded-md bg-muted/50 p-0.5 border border-border/60">
+            {(['risk', 'growth', 'strategic'] as PovMode[]).map((pov) => (
+              <button
+                key={pov}
+                onClick={() => setActivePov(pov)}
+                className={cn(
+                  'px-3 py-1 rounded text-[11px] font-medium transition-all capitalize',
+                  activePov === pov
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {POV_LABELS[pov]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-[11px] text-muted-foreground/80 leading-relaxed italic">
+          {POV_FRAMING[activePov]}
+        </p>
+      </div>
+
       {/* ── Customer engagement ── */}
       <div className="space-y-2">
         <p className="text-[13px] font-semibold text-foreground">Customer engagement</p>
 
         {/* 1. Stakeholders & messaging — Card Tabs UI */}
-        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} />
+        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} activePov={activePov} />
 
         {/* 2. Objection handling (LAER) */}
         <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>
-          {(() => {
-            const objections = b.objection_handling?.objections ?? [];
-            if (objections.length > 0) {
-              return <ObjectionLAERAccordion objections={objections} />;
-            }
-            return <p className="text-[11px] text-muted-foreground/60 italic">Objections not captured yet.</p>;
-          })()}
+          {objectionResult.objections.length > 0 ? (
+            <div className="space-y-1">
+              {objectionResult.objections.map((obj, idx) => (
+                <div key={idx} className="relative">
+                  {objectionResult.highlightedIndices.has(idx) && (
+                    <span className="absolute -top-1 right-2 z-10 px-1.5 py-px rounded-full bg-primary/10 text-primary text-[8px] font-semibold border border-primary/20">
+                      Highlighted
+                    </span>
+                  )}
+                </div>
+              ))}
+              <ObjectionLAERAccordion objections={objectionResult.objections} />
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60 italic">Objections not captured yet.</p>
+          )}
         </CollapsibleSection>
 
         {/* 3. KPIs */}
         <CollapsibleSection title="KPIs" subtitle="Success metrics and targets" defaultOpen>
-          {b.commercial_assets.kpis.length > 0 ? (
+          {kpiResult.kpis.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {b.commercial_assets.kpis.map((k, i) => (
-                <SectionCard key={i} className="p-2">
+              {kpiResult.kpis.map((k, i) => (
+                <SectionCard key={i} className={cn('p-2', kpiResult.highlightedIndices.has(i) && 'ring-1 ring-primary/30 bg-primary/[0.04]')}>
                   <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
                     <BarChart3 className="w-3 h-3 text-primary/50" />
                     {k.label}
+                    {kpiResult.highlightedIndices.has(i) && (
+                      <span className="ml-auto px-1.5 py-px rounded-full bg-primary/10 text-primary text-[8px] font-semibold border border-primary/20">
+                        Highlighted
+                      </span>
+                    )}
                   </p>
                   <p className="text-[11px] text-primary font-medium">{k.target}</p>
                 </SectionCard>
@@ -677,8 +800,8 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           )}
         </CollapsibleSection>
 
-        {/* 4. Delivery assets — Accordion */}
-        <DeliveryAssetsAccordion deliveryAssets={b.delivery_assets} />
+        {/* 4. Delivery assets — POV-ordered */}
+        <DeliveryAssetsAccordionOrdered deliveryAssets={b.delivery_assets} order={deliveryOrder} />
       </div>
 
       {/* ── Support Drawer (right-side overlay) ── */}

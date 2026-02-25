@@ -73,6 +73,8 @@ interface RecommendedPlaysPanelProps {
   /** Auto-open evidence drawer on mount (from Account Intelligence) */
   initialOpenEvidence?: boolean;
   onEvidenceDrawerOpened?: () => void;
+  /** External deterministic score boosts per packId */
+  scoreBoosts?: Record<string, number>;
 }
 
 // ============= Main Component =============
@@ -97,6 +99,7 @@ export function RecommendedPlaysPanel({
   onClearTrendFocus,
   initialOpenEvidence,
   onEvidenceDrawerOpened,
+  scoreBoosts,
 }: RecommendedPlaysPanelProps) {
   const [driversOpen, setDriversOpen] = useState(false);
   // Inline loader on mount
@@ -201,9 +204,17 @@ export function RecommendedPlaysPanel({
       initiatives: initiativesTitlesForScoring,
       trends: trendsTitlesForScoring,
     };
-    const all = scorePlayPacks(PLAY_SERVICE_PACKS, input);
+    let all = scorePlayPacks(PLAY_SERVICE_PACKS, input);
+    // Apply external deterministic score boosts (from specific context)
+    if (scoreBoosts && Object.keys(scoreBoosts).length > 0) {
+      all = all.map(p => ({
+        ...p,
+        score: Math.min(100, p.score + (scoreBoosts[p.packId] ?? 0)),
+        engagementFitPct: Math.min(100, p.engagementFitPct + (scoreBoosts[p.packId] ?? 0)),
+      })).sort((a, b) => b.score - a.score);
+    }
     return signalsForScoring.length === 0 ? all.slice(0, 2) : all.slice(0, 3);
-  }, [signalsForScoring, engagementType, motion, readinessScore, initiativesTitlesForScoring, trendsTitlesForScoring]);
+  }, [signalsForScoring, engagementType, motion, readinessScore, initiativesTitlesForScoring, trendsTitlesForScoring, scoreBoosts]);
 
   const selectedPacks = useMemo(() => getSelectedPacks(accountId), [accountId, scoredPlays]);
   const activePlay = useMemo(() => getActivePlay(accountId), [accountId, scoredPlays]);

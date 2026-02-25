@@ -85,7 +85,7 @@ export const PLAY_SERVICE_PACKS: PlayServicePack[] = [
     effort: 'M',
   },
   {
-    id: 'play_governance',
+    id: 'play_governance_scale',
     name: 'AI Governance for Scalable Deployment',
     tags: ['ai_governance', 'security_identity', 'compliance', 'ai_readiness'],
     bias: null,

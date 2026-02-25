@@ -540,8 +540,11 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
   const [supportOpen, setSupportOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
-  // ── POV mode ──
-  const signalIds = useMemo(() => selectionContext?.basedOn.signals ?? [], [selectionContext]);
+  // ── POV mode (play-specific signals preferred, global fallback) ──
+  const signalIds = useMemo(() => {
+    const playCitations = b.signal_citation_ids ?? [];
+    return playCitations.length > 0 ? playCitations : (selectionContext?.basedOn.signals ?? []);
+  }, [b.signal_citation_ids, selectionContext]);
   const defaultPov = useMemo(() => deriveDefaultPov(signalIds), [signalIds]);
   const [activePov, setActivePov] = useState<PovMode>(defaultPov);
 

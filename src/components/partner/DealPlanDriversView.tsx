@@ -90,7 +90,7 @@ import { DealHypothesisBlock } from '@/partner/components/dealPlanning/DealHypot
 import { RisksBlockersSection } from '@/partner/components/dealPlanning/RisksBlockersSection';
 import { getReadinessScore } from '@/data/partner/accountMemoryStore';
 import { buildComposerInputBusiness } from '@/services/partner/dealPlanning/buildComposerInputBusiness';
-import { getActiveSignalIds, setActiveSignals } from '@/partner/data/dealPlanning/activeSignalsStore';
+import { getActiveSignalIds, setActiveSignals, addActiveSignal } from '@/partner/data/dealPlanning/activeSignalsStore';
 import { consumeDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
 import { buildSignalPool } from '@/partner/data/dealPlanning/signalPool';
 import { getByFocusId as getTechLandscape } from '@/data/partner/technicalLandscapeStore';
@@ -777,7 +777,18 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             onPlaySelected={handlePlaySelected}
             onGoToAccountIntelligence={onGoToAccountIntelligence}
             focusSignal={focusSignal}
-            onClearFocus={() => setFocusSignal(null)}
+            onClearFocus={() => {
+              setFocusSignal(null);
+              // Restore default active signals after clearing focus
+              if (selectedAccount) {
+                const currentIds = getActiveSignalIds(selectedAccount);
+                if (currentIds.length <= 1) {
+                  addActiveSignal(selectedAccount, 'sig-sch-finops-ai');
+                  addActiveSignal(selectedAccount, 'sig-sch-ai-governance');
+                }
+              }
+              refresh();
+            }}
             focusTrend={focusTrend}
             onClearTrendFocus={() => setFocusTrend(null)}
             initialOpenEvidence={initialOpenEvidence}

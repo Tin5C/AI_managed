@@ -123,8 +123,12 @@ export function RecommendedPlaysPanel({
     }
   }, [initialOpenEvidence, onEvidenceDrawerOpened]);
 
-  // Active signals from the picker store
-  const activeSignalIds = useMemo(() => getActiveSignalIds(accountId), [accountId, promotedSignals, showPicker]);
+  // Active signals from the picker store — focus override when Quick Brief signal is active
+  const rawActiveSignalIds = useMemo(() => getActiveSignalIds(accountId), [accountId, promotedSignals, showPicker]);
+  const activeSignalIds = useMemo(
+    () => focusSignal ? [focusSignal.id] : rawActiveSignalIds,
+    [focusSignal, rawActiveSignalIds],
+  );
   const activeSignalCount = activeSignalIds.length;
 
   // Active initiatives & trends selections
@@ -242,7 +246,7 @@ export function RecommendedPlaysPanel({
     onRefresh?.();
   };
 
-  // Display counts
+  // Display counts — focus override ensures Signals: 1 when focused
   const displaySignalCount = activeSignalCount > 0 ? activeSignalCount : promotedSignals.length;
   const initiativeSummary = activeInitiativeIds.length > 0 ? `${activeInitiativeIds.length}/3` : 'All';
   const trendSummary = activeTrendIds.length > 0 ? `${activeTrendIds.length}/3` : 'All';

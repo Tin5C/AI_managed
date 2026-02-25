@@ -14,10 +14,9 @@ import {
   reorderObjections,
   reorderDeliverySections,
   reorderTalkTracks,
-  POV_FRAMING,
-  POV_LABELS,
   type DeliverySection,
 } from './buildPovOrdering';
+import { buildTheses, POV_SUPPORT } from './buildStrategicTheses';
 import { getByFocusId as getTrendPack } from '@/data/partner/industryAuthorityTrendsStore';
 import { getByFocusId as getInitiativesPack } from '@/data/partner/publicInitiativesStore';
 import {
@@ -553,6 +552,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
     return reorderObjections(objections, activePov);
   }, [b.objection_handling, activePov]);
   const deliveryOrder = useMemo(() => reorderDeliverySections(activePov), [activePov]);
+  const theses = useMemo(() => buildTheses(signalIds), [signalIds]);
 
   const citationCount = b.signal_citation_ids?.length ?? 0;
 
@@ -723,29 +723,28 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
       {/* ── Divider ── */}
       <div className="border-t border-border/40 pt-3 mt-1" />
 
-      {/* ── POV Mode Chips ── */}
+      {/* ── Strategic Thesis (POV selection) ── */}
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Point of View</span>
-          <div className="inline-flex rounded-md bg-muted/50 p-0.5 border border-border/60">
-            {(['risk', 'growth', 'strategic'] as PovMode[]).map((pov) => (
-              <button
-                key={pov}
-                onClick={() => setActivePov(pov)}
-                className={cn(
-                  'px-3 py-1 rounded text-[11px] font-medium transition-all capitalize',
-                  activePov === pov
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {POV_LABELS[pov]}
-              </button>
-            ))}
-          </div>
+        <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Strategic Thesis</p>
+        <div className="space-y-1">
+          {theses.map(({ pov, thesis }) => (
+            <button
+              key={pov}
+              type="button"
+              onClick={() => setActivePov(pov)}
+              className={cn(
+                'w-full text-left px-3 py-2 rounded-lg border transition-all text-[11px] leading-relaxed',
+                activePov === pov
+                  ? 'bg-primary/[0.06] border-primary/30 text-foreground font-medium shadow-sm'
+                  : 'bg-muted/10 border-border/30 text-muted-foreground/60 hover:bg-muted/20 hover:text-muted-foreground',
+              )}
+            >
+              {thesis}
+            </button>
+          ))}
         </div>
-        <p className="text-[11px] text-muted-foreground/80 leading-relaxed italic">
-          {POV_FRAMING[activePov]}
+        <p className="text-[10px] text-muted-foreground/70 italic leading-snug">
+          {POV_SUPPORT[activePov]}
         </p>
       </div>
 

@@ -307,7 +307,7 @@ function NextActionStrip({ readinessScore }: { readinessScore: number | null }) 
 // ============= Main Component =============
 
 export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligence }: DealPlanDriversViewProps) {
-  const [, forceUpdate] = useState(0);
+  const [renderTick, forceUpdate] = useState(0);
   const refresh = useCallback(() => forceUpdate((n) => n + 1), []);
   const strategicFramingRef = useRef<HTMLDivElement>(null);
 
@@ -396,7 +396,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const selectedDriverIds = useMemo(() => {
     if (!selectedAccount) return [] as string[];
     return getActiveSignalIds(selectedAccount);
-  }, [selectedAccount, showPicker]);
+  }, [selectedAccount, renderTick]);
 
   const [driversExpanded, setDriversExpanded] = useState(false);
   const [shakeDrivers, setShakeDrivers] = useState(false);
@@ -548,7 +548,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const effectiveSignalIds = useMemo(() => {
     if (focusSignal) return [focusSignal.id];
     return selectedAccount ? getActiveSignalIds(selectedAccount) : [];
-  }, [focusSignal, selectedAccount, drivers, showPicker]);
+  }, [focusSignal, selectedAccount, renderTick]);
 
   const topPlayPackName = useMemo(() => {
     if (effectiveDrivers.length === 0) return null;

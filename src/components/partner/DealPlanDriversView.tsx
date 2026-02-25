@@ -98,6 +98,7 @@ import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import { getBusinessPlayPackage, getAvailableVariants, type BusinessVariant } from '@/data/partner/businessPlayPackageStore';
 import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
+import { TechnicalPlayPackView } from '@/partner/components/dealPlanning/TechnicalPlayPackView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
 import { getDealPlanningSelection, getEntryMode, setEntryMode, getCustomerProblem, setCustomerProblem, getSelectionContext, type EntryMode } from '@/data/partner/dealPlanningSelectionStore';
 
@@ -449,6 +450,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [planGenerated, setPlanGenerated] = useState(false);
   const [composerFallbackJson, setComposerFallbackJson] = useState<string | null>(null);
   const [businessVariant, setBusinessVariant] = useState<BusinessVariant>('executive');
+  const [technicalVariant, setTechnicalVariant] = useState<'executive' | 'grounded'>('executive');
   const canGenerate = selectedAccount !== null && (entryMode === 'problem' ? customerProblem.trim().length > 0 : (engagementType !== null && motion !== null));
 
   const [inboxVersion, setInboxVersion] = useState(0);
@@ -1038,6 +1040,23 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
           {/* ===== TECHNICAL TAB ===== */}
           {viewTab === 'technical' && (
             <div className="space-y-3">
+              {/* Play-aware Technical Pack */}
+              {(() => {
+                const activePlay = selectedAccount ? getActivePlay(selectedAccount) : null;
+                const playId = activePlay?.playId ?? '';
+                if (playId && selectedAccount) {
+                  return (
+                    <TechnicalPlayPackView
+                      playId={playId}
+                      accountId={selectedAccount}
+                      variant={technicalVariant}
+                      onVariantChange={setTechnicalVariant}
+                    />
+                  );
+                }
+                return null;
+              })()}
+
               {/* 1) HERO: Technical Recommendations */}
               <TechnicalRecommendationsSection
                 promotedSignals={drivers}

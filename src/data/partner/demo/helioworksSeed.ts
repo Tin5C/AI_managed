@@ -437,6 +437,44 @@ Suggested pilots
     tags: ['pillar:technical', 'tag:governance', 'tag:model-inventory', 'rel:play_governance'],
     scope_id: null,
   });
+
+  // ── H) AI Governance evidence items ──
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'No centralized AI policy enforcement',
+    content_text: 'AI policies are not consistently enforced across teams; controls vary by workload and owner.\n\nSource: Security & governance notes',
+    tags: ['pillar:technical', 'tag:governance', 'tag:policy', 'rel:play_governance'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Manual AI approval workflow',
+    content_text: 'AI deployment approvals are handled manually and inconsistently; no standard workflow or audit trail.\n\nSource: Delivery notes',
+    tags: ['pillar:technical', 'tag:workflow', 'tag:approvals', 'rel:play_governance'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Azure OpenAI expansion without model inventory',
+    content_text: 'Azure OpenAI usage is expanding, but models/owners/versions are not tracked centrally.\n\nSource: Architecture review',
+    tags: ['pillar:technical', 'tag:model-inventory', 'tag:azure-openai', 'rel:play_governance'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Swiss data residency constraints',
+    content_text: 'Production AI workloads must comply with Swiss data residency and audit requirements.\n\nSource: Compliance memo',
+    tags: ['pillar:technical', 'tag:data-residency', 'tag:compliance', 'rel:play_governance'],
+    scope_id: null,
+  });
 }
 
 // Auto-seed on import

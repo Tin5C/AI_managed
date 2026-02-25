@@ -16,7 +16,7 @@ import {
   reorderTalkTracks,
   type DeliverySection,
 } from './buildPovOrdering';
-import { buildTheses, POV_SUPPORT } from './buildStrategicTheses';
+import { buildTheses } from './buildStrategicTheses';
 import { getByFocusId as getTrendPack } from '@/data/partner/industryAuthorityTrendsStore';
 import { getByFocusId as getInitiativesPack } from '@/data/partner/publicInitiativesStore';
 import {
@@ -552,7 +552,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
     return reorderObjections(objections, activePov);
   }, [b.objection_handling, activePov]);
   const deliveryOrder = useMemo(() => reorderDeliverySections(activePov), [activePov]);
-  const theses = useMemo(() => buildTheses(signalIds), [signalIds]);
+  const theses = useMemo(() => buildTheses(signalIds, pkg.play_id), [signalIds, pkg.play_id]);
 
   const citationCount = b.signal_citation_ids?.length ?? 0;
 

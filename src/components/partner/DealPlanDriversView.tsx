@@ -79,7 +79,7 @@ import { addTags } from '@/data/partner/dealPlanningSignalTagsStore';
 import { RecommendedPlaysPanel } from '@/partner/components/dealPlanning/RecommendedPlaysPanel';
 import { SignalPickerPanel } from '@/partner/components/dealPlanning/SignalPickerPanel';
 import { StrategicFramingSection } from '@/partner/components/dealPlanning/StrategicFramingSection';
-import { TechnicalRecommendationsSection } from '@/partner/components/dealPlanning/TechnicalRecommendationsSection';
+// TechnicalRecommendationsSection removed — replaced by unified TechnicalPlayPackView canvas
 import { PLAY_SERVICE_PACKS } from '@/partner/data/dealPlanning/servicePacks';
 import { scorePlayPacks } from '@/partner/lib/dealPlanning/propensity';
 import { setActivePlay, getActivePlay } from '@/partner/data/dealPlanning/selectedPackStore';
@@ -1056,132 +1056,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
                 }
                 return null;
               })()}
-
-              {/* 1) HERO: Technical Recommendations */}
-              <TechnicalRecommendationsSection
-                promotedSignals={drivers}
-                engagementType={engagementType as 'new_logo' | 'existing_customer' | null}
-                motion={motion}
-                readinessScore={readinessData?.score}
-              />
-
-              {/* 2) Requirements & Constraints */}
-              <CollapsibleSection title="Requirements & Constraints" subtitle="Customer requirements and technical constraints" defaultOpen={true}>
-                <EmptyPlaceholder
-                  icon={<FileText className="w-5 h-5" />}
-                  title="No requirements captured yet"
-                  description="Add customer evidence to extract constraints. Upload RFPs, architecture documents, or meeting notes in Customer Evidence to surface requirements."
-                />
-              </CollapsibleSection>
-
-              {/* 3) Architecture & Landscape */}
-              <CollapsibleSection title="Architecture & Landscape" subtitle="Known vendor stack and architecture patterns" defaultOpen={true}>
-                {techLandscape ? (
-                  <div className="space-y-3">
-                    {techLandscape.cloud_strategy && (
-                      <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Cloud Strategy</p>
-                        <p className="text-xs text-foreground">{techLandscape.cloud_strategy}</p>
-                      </div>
-                    )}
-                    {techLandscape.known_vendors && techLandscape.known_vendors.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Known Vendors</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {techLandscape.known_vendors.map((v, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium bg-muted/40 text-foreground border border-border/30">{v}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {techLandscape.known_applications && techLandscape.known_applications.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Applications</p>
-                        <div className="space-y-0.5">
-                          {techLandscape.known_applications.map((a, i) => (
-                            <p key={i} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-primary/40 mt-0.5">-</span> {a}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {techLandscape.architecture_patterns && techLandscape.architecture_patterns.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Architecture Patterns</p>
-                        <div className="space-y-0.5">
-                          {techLandscape.architecture_patterns.map((p, i) => (
-                            <p key={i} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-primary/40 mt-0.5">-</span> {p}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <EmptyPlaceholder
-                    icon={<Server className="w-5 h-5" />}
-                    title="No landscape data available"
-                    description="Technical landscape information will appear once account intelligence is populated."
-                  />
-                )}
-              </CollapsibleSection>
-
-              {/* 4) Delivery Feasibility */}
-              <CollapsibleSection title="Delivery Feasibility" subtitle="Readiness assessment for delivery" defaultOpen={false}>
-                {readinessData ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/20 border border-border/40">
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Evidence Readiness</p>
-                        <p className="text-xs font-medium text-foreground mt-0.5">{readinessData.score}%</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {Object.entries(readinessData.pillars).map(([pillar, covered]) => (
-                          <span
-                            key={pillar}
-                            className={cn(
-                              'px-1.5 py-0.5 rounded text-[9px] font-medium border',
-                              covered
-                                ? 'bg-muted/40 text-foreground border-border/30'
-                                : 'bg-muted/20 text-muted-foreground/60 border-border/20'
-                            )}
-                          >
-                            {pillar}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Delivery feasibility is derived from evidence coverage across five pillars. Add customer evidence to improve coverage and unlock detailed feasibility assessment.
-                    </p>
-                  </div>
-                ) : (
-                  <EmptyPlaceholder
-                    icon={<Layers className="w-5 h-5" />}
-                    title="No readiness data"
-                    description="Select an account and add customer evidence to generate delivery feasibility insights."
-                  />
-                )}
-              </CollapsibleSection>
-
-              {/* 5) Technical Risks & Blockers */}
-              <CollapsibleSection title="Technical Risks & Blockers" subtitle="Technical risks and delivery blockers" defaultOpen={false}>
-                {hydratedPlan ? (
-                  <RisksBlockersSection
-                    risks={hydratedPlan.risks}
-                    focusId={selectedAccount}
-                    onRefresh={refresh}
-                  />
-                ) : (
-                  <EmptyPlaceholder
-                    icon={<AlertTriangle className="w-5 h-5" />}
-                    title="No technical risks identified"
-                    description="Technical risks will surface once a plan is generated and delivery context is added."
-                  />
-                )}
-              </CollapsibleSection>
 
               {/* Cross-reference */}
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/10 border border-border/30">

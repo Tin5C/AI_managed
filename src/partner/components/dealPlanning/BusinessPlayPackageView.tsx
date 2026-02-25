@@ -669,10 +669,29 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
           )}
         </SectionCard>
 
-        {/* Card B — Point of View */}
+        {/* Card B — Point of View (with inline POV thesis selection) */}
         <SectionCard className="sm:col-span-2">
           <Label>Point of View</Label>
-          <Body>{povText}</Body>
+          <div className="space-y-1 mt-1">
+            {theses.map(({ pov, thesis }) => (
+              <button
+                key={pov}
+                type="button"
+                onClick={() => setActivePov(pov)}
+                className={cn(
+                  'w-full text-left px-3 py-2 rounded-lg border transition-all text-[11px] leading-relaxed',
+                  activePov === pov
+                    ? 'bg-primary/[0.06] border-primary/30 text-foreground font-medium shadow-sm'
+                    : 'bg-muted/10 border-border/30 text-muted-foreground/60 hover:bg-muted/20 hover:text-muted-foreground',
+                )}
+              >
+                {thesis}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 italic leading-snug mt-1">
+            {POV_SUPPORT[activePov]}
+          </p>
         </SectionCard>
 
         {/* Card C — Plan */}
@@ -720,33 +739,6 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         </SectionCard>
       </div>
 
-      {/* ── Divider ── */}
-      <div className="border-t border-border/40 pt-3 mt-1" />
-
-      {/* ── Strategic Thesis (POV selection) ── */}
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Strategic Thesis</p>
-        <div className="space-y-1">
-          {theses.map(({ pov, thesis }) => (
-            <button
-              key={pov}
-              type="button"
-              onClick={() => setActivePov(pov)}
-              className={cn(
-                'w-full text-left px-3 py-2 rounded-lg border transition-all text-[11px] leading-relaxed',
-                activePov === pov
-                  ? 'bg-primary/[0.06] border-primary/30 text-foreground font-medium shadow-sm'
-                  : 'bg-muted/10 border-border/30 text-muted-foreground/60 hover:bg-muted/20 hover:text-muted-foreground',
-              )}
-            >
-              {thesis}
-            </button>
-          ))}
-        </div>
-        <p className="text-[10px] text-muted-foreground/70 italic leading-snug">
-          {POV_SUPPORT[activePov]}
-        </p>
-      </div>
 
       {/* ── Customer engagement ── */}
       <div className="space-y-2">

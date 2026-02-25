@@ -381,6 +381,62 @@ Suggested pilots
     tags: ['technology', 'architecture', 'data-platform', 'governance', 'lakehouse'],
     scope_id: null,
   });
+
+  // ── G) Technical evidence items (play-tagged for filtering) ──
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Data residency: Swiss region required for AI/ML workloads',
+    content_text: 'Security and compliance require AI/ML processing in Switzerland (Azure Swiss region) for production workloads.\n\nSource: Security memo',
+    tags: ['pillar:technical', 'tag:data-residency', 'tag:compliance', 'rel:play_governance', 'rel:play_finops'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Landing zone: hub-and-spoke with Swiss + EU connectivity',
+    content_text: 'Current Azure architecture uses hub-and-spoke networking; EU connectivity exists for shared services.\n\nSource: Architecture diagram',
+    tags: ['pillar:technical', 'tag:network', 'tag:landing-zone', 'rel:play_governance', 'rel:play_finops'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: '24/7 SOC present; audit logging required for production AI',
+    content_text: 'Security team requires centralized audit logs and monitoring for production AI deployments.\n\nSource: Security memo',
+    tags: ['pillar:technical', 'tag:security', 'tag:audit-logging', 'rel:play_governance'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'ServiceNow is the central approvals workflow tool',
+    content_text: 'Approvals and ticketing run through ServiceNow; governance workflows should integrate here.\n\nSource: Meeting notes',
+    tags: ['pillar:technical', 'tag:integration', 'tag:servicenow', 'rel:play_governance', 'rel:play_finops'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'SAP cost centers exist, but not consistently mapped to Azure subscriptions',
+    content_text: 'Finance cost-center data is available; subscription tagging and mapping is incomplete for chargeback/showback.\n\nSource: Finance IT notes',
+    tags: ['pillar:technical', 'tag:finops', 'tag:sap', 'tag:chargeback', 'rel:play_finops'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'schindler',
+    type: 'architecture_diagram',
+    title: 'Model inventory is not centralized across teams',
+    content_text: 'AI experimentation occurs across teams; ownership and model registry are fragmented.\n\nSource: Discovery notes',
+    tags: ['pillar:technical', 'tag:governance', 'tag:model-inventory', 'rel:play_governance'],
+    scope_id: null,
+  });
 }
 
 // Auto-seed on import

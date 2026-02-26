@@ -222,9 +222,167 @@ const SCHINDLER_PACK: IndustryAuthorityTrendsPack = {
   ],
 };
 
+// ============= FIFA Seed =============
+
+const FIFA_PACK: IndustryAuthorityTrendsPack = {
+  focusId: 'fifa',
+  industry_label: 'Sports Governance — global governing body, digital fan platforms & large-scale event operations',
+  generated_at: '2026-02-16T00:00:00Z',
+  summary: {
+    industry_implications: [
+      'AI governance and content moderation at scale are becoming regulatory expectations, not differentiators.',
+      'Cross-border fan data flows require explicit compliance posture as enforcement tightens globally.',
+      'Event-driven cloud workloads demand cost governance models that handle extreme spikiness without margin erosion.',
+      'Online safety obligations are shifting from voluntary commitments to enforceable regulatory requirements.',
+    ],
+    near_term_watchouts: [
+      'EU Digital Services Act enforcement timelines create near-term compliance obligations for large platforms.',
+      'AI-generated content (deepfakes, synthetic media) in sports creates integrity and brand risks requiring detection capabilities.',
+      'Peak-event cloud costs can spiral without FinOps disciplines adapted to burst workloads.',
+    ],
+    data_gaps: [
+      'DATA NEEDED: Module 0V offer map clusters to map trends to vendor offer clusters deterministically.',
+      'DATA NEEDED: Module 0A service motions/packages to map trends to hub org delivery motions deterministically.',
+    ],
+  },
+  trends: [
+    {
+      id: 'trend_sportsgov_eu_ai_act_timeline_undated',
+      trend_title: 'EU AI Act timeline: governance expectations for AI systems used in content moderation and decision-making',
+      source_org: 'European Union (Digital Strategy)',
+      source_type: 'standards_body',
+      source_url: 'https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai',
+      source_published_at: null,
+      thesis_summary:
+        'The EU AI Act entered into force on 1 Aug 2024 with staged applicability through 2026, creating governance and documentation requirements for AI systems including those used in content moderation and automated decision-making.',
+      applied_to_focus: {
+        why_it_matters:
+          'FIFA operates AI-driven content moderation, fan engagement, and decision-support systems that may fall under EU AI Act obligations, requiring governance readiness before 2026 deadlines.',
+        where_it_shows_up:
+          'AI content moderation pipelines, automated ticketing/access decisions, fan data profiling, internal AI policy and documentation.',
+        stakeholders: ['Chief Digital Officer', 'Legal / Compliance', 'CISO', 'Head of Technology'],
+        capability_implications: [
+          'Responsible AI governance framework',
+          'Documentation and traceability for AI systems',
+          'Risk classification processes',
+          'Human-in-the-loop controls for high-impact decisions',
+        ],
+        mapped_vendor_offer_clusters: ['DATA NEEDED'],
+        mapped_hub_org_motions: ['DATA NEEDED'],
+      },
+      confidence: 'High',
+    },
+    {
+      id: 'trend_sportsgov_eu_dsa_enforcement_2024',
+      trend_title: 'EU Digital Services Act: platform accountability for illegal and harmful content at scale',
+      source_org: 'European Commission',
+      source_type: 'standards_body',
+      source_url: 'https://digital-strategy.ec.europa.eu/en/policies/digital-services-act-package',
+      source_published_at: null,
+      thesis_summary:
+        'The Digital Services Act establishes obligations for online platforms regarding transparency, content moderation, and user protection, with full applicability since February 2024.',
+      applied_to_focus: {
+        why_it_matters:
+          'FIFA digital platforms (streaming, social, fan engagement) face DSA-aligned expectations for content moderation, transparency reporting, and user safety — especially during major tournaments.',
+        where_it_shows_up:
+          'Fan-facing platforms, content moderation workflows, reporting and transparency mechanisms, complaint handling processes.',
+        stakeholders: ['Head of Digital Platforms', 'Legal / Compliance', 'Chief Communications Officer', 'CISO'],
+        capability_implications: [
+          'Scalable content moderation pipelines',
+          'Transparency and audit reporting',
+          'User complaint and appeal mechanisms',
+          'Cross-platform policy enforcement',
+        ],
+        mapped_vendor_offer_clusters: ['DATA NEEDED'],
+        mapped_hub_org_motions: ['DATA NEEDED'],
+      },
+      confidence: 'High',
+    },
+    {
+      id: 'trend_sportsgov_mckinsey_finops_ai_2024',
+      trend_title: 'FinOps and AI cost governance: managing cloud economics as AI workloads scale',
+      source_org: 'McKinsey',
+      source_type: 'consulting_report',
+      source_url: 'https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/tech-forward/finops-the-next-lever-to-transform-cloud-economics',
+      source_published_at: '2024-09-26',
+      thesis_summary:
+        'McKinsey positions FinOps as a critical discipline for governing cloud costs as AI and data workloads scale, emphasizing cross-functional accountability and real-time cost visibility.',
+      applied_to_focus: {
+        why_it_matters:
+          'FIFA operates extreme burst workloads during tournaments (streaming, ticketing, fan platforms); without FinOps discipline, cloud costs during peak events can erode margins significantly.',
+        where_it_shows_up:
+          'Event-driven infrastructure scaling, AI/ML pipeline costs, streaming and CDN spend, post-event cost analysis and optimization.',
+        stakeholders: ['CFO', 'CIO / Head of Infrastructure', 'Head of Digital Platforms', 'Cloud Architecture Lead'],
+        capability_implications: [
+          'FinOps operating model for burst workloads',
+          'Real-time cost dashboards and alerting',
+          'Workload right-sizing and reservation strategies',
+          'Cross-functional cost accountability',
+        ],
+        mapped_vendor_offer_clusters: ['DATA NEEDED'],
+        mapped_hub_org_motions: ['DATA NEEDED'],
+      },
+      confidence: 'Medium',
+    },
+    {
+      id: 'trend_sportsgov_wef_cybersecurity_events_2024',
+      trend_title: 'Cybersecurity resilience for large-scale events: protecting critical digital infrastructure',
+      source_org: 'World Economic Forum',
+      source_type: 'analyst_report',
+      source_url: 'https://www.weforum.org/publications/global-cybersecurity-outlook-2024/',
+      source_published_at: '2024-01-01',
+      thesis_summary:
+        'The WEF Global Cybersecurity Outlook highlights growing cyber risks for organizations managing large-scale operations, emphasizing resilience, supply-chain security, and the widening cyber-skills gap.',
+      applied_to_focus: {
+        why_it_matters:
+          'FIFA tournaments are high-profile targets for cyber attacks; resilience across ticketing, broadcasting, access control, and fan data systems is a non-negotiable operational requirement.',
+        where_it_shows_up:
+          'Event IT infrastructure, identity and access management, broadcast and streaming security, third-party/vendor risk management.',
+        stakeholders: ['CISO', 'Head of Event Technology', 'CIO', 'Risk Management'],
+        capability_implications: [
+          'Zero-trust architecture for event infrastructure',
+          'Incident response and recovery playbooks',
+          'Third-party security assessment',
+          'Identity and fraud prevention at scale',
+        ],
+        mapped_vendor_offer_clusters: ['DATA NEEDED'],
+        mapped_hub_org_motions: ['DATA NEEDED'],
+      },
+      confidence: 'Medium',
+    },
+    {
+      id: 'trend_sportsgov_oecd_crossborder_data_2024',
+      trend_title: 'Cross-border data governance: navigating divergent privacy regimes for global operations',
+      source_org: 'OECD',
+      source_type: 'analyst_report',
+      source_url: 'https://www.oecd.org/en/topics/sub-issues/cross-border-data-flows.html',
+      source_published_at: null,
+      thesis_summary:
+        'The OECD frames cross-border data governance as an increasing challenge as privacy regimes diverge globally, requiring organizations to adopt interoperable compliance models.',
+      applied_to_focus: {
+        why_it_matters:
+          'FIFA collects and processes fan, athlete, and member data across 200+ member associations; divergent privacy regimes create compliance complexity for global digital platforms.',
+        where_it_shows_up:
+          'Fan identity and registration systems, data residency decisions, member association data sharing, marketing and engagement platforms.',
+        stakeholders: ['Data Protection Officer', 'Legal / Compliance', 'Chief Digital Officer', 'Head of Member Associations'],
+        capability_implications: [
+          'Data residency and sovereignty controls',
+          'Consent management across jurisdictions',
+          'Privacy-by-design in platform architecture',
+          'Cross-border data transfer mechanisms',
+        ],
+        mapped_vendor_offer_clusters: ['DATA NEEDED'],
+        mapped_hub_org_motions: ['DATA NEEDED'],
+      },
+      confidence: 'High',
+    },
+  ],
+};
+
 function seedDemoData(): void {
   if (getByFocusId('schindler')) return;
   packs.push(SCHINDLER_PACK);
+  packs.push(FIFA_PACK);
 }
 
 seedDemoData();

@@ -475,6 +475,114 @@ Suggested pilots
     tags: ['pillar:technical', 'tag:data-residency', 'tag:compliance', 'rel:play_governance'],
     scope_id: null,
   });
+
+  // ══════════════════════════════════════════════
+  // ── FIFA Evidence & Memory ──
+  // ══════════════════════════════════════════════
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'FIFA+ streaming platform — global digital initiative',
+    content_text: `FIFA+ is FIFA\'s free streaming and content platform launched in 2022.
+
+Key facts:
+- Global reach across 200+ member associations
+- Live match streaming, archive content, interactive games
+- Significant cloud infrastructure for content delivery and analytics
+- Growing AI use cases: personalisation, content recommendation, fan engagement
+
+Source: https://www.fifa.com/fifaplus`,
+    tags: ['transcript', 'digital-strategy', 'platform', 'ai-readiness'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'FIFA social media protection programme',
+    content_text: `FIFA operates an online abuse detection and protection programme for players and officials.
+
+Key statements:
+- AI-powered moderation to detect abuse across social media platforms
+- Programme covers major tournaments (World Cup, Women\'s World Cup)
+- Governance requirements for responsible AI use in content moderation
+- Data protection considerations for monitoring across jurisdictions
+
+Source: https://www.fifa.com/social-media-protection`,
+    tags: ['transcript', 'online-safety', 'ai-governance', 'data-protection'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'FIFA hiring patterns — digital and technology roles',
+    content_text: `FIFA actively recruits for digital transformation, data, and technology roles.
+
+Observations:
+- Roles spanning data engineering, cloud infrastructure, and digital product management
+- Indicates investment in building internal technology capabilities
+- Zurich headquarters with global operations
+- Growth in AI/ML and analytics-related positions
+
+Source: https://jobs.fifa.com`,
+    tags: ['transcript', 'hiring', 'digital-transformation', 'operations'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'FIFA 2023–2027 strategic objectives',
+    content_text: `FIFA\'s published strategic plan covers the 2023–2027 cycle.
+
+Key themes:
+- "Making Football Truly Global" — expanding access and participation
+- Technology and innovation as enablers for development programmes
+- Digital engagement with 5 billion fans globally
+- Governance, transparency, and compliance as foundational pillars
+- Revenue diversification through digital platforms and partnerships
+
+Source: https://publications.fifa.com/en/vision-report-2023-2027/`,
+    tags: ['transcript', 'strategy', 'governance', 'digital-engagement'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'Data governance considerations for global sports body',
+    content_text: `FIFA operates across 200+ member associations with varying data-protection regimes.
+
+Key considerations:
+- GDPR compliance for European operations (Zurich HQ)
+- Cross-border data transfer requirements for global tournament operations
+- Fan data protection across streaming and engagement platforms
+- Player data governance for performance and medical information
+- AI ethics requirements for automated content moderation
+
+Source: Internal analysis based on public FIFA governance documents`,
+    tags: ['pillar:technical', 'tag:data-residency', 'tag:compliance', 'tag:governance', 'rel:play_governance'],
+    scope_id: null,
+  });
+
+  addMemoryItem({
+    account_id: 'fifa',
+    type: 'architecture_diagram',
+    title: 'Cloud cost considerations for event-driven workloads',
+    content_text: `FIFA\'s digital operations exhibit significant cost variability tied to tournament cycles.
+
+Key observations:
+- Major events (World Cup) drive cloud usage spikes for streaming, analytics, and fan platforms
+- Off-season periods present optimisation opportunities
+- AI workload costs (content moderation, personalisation) growing as services scale
+- Cost attribution across programmes and member associations is a governance consideration
+
+Source: Internal analysis based on public FIFA digital strategy`,
+    tags: ['pillar:technical', 'tag:finops', 'tag:cost-management', 'rel:play_finops'],
+    scope_id: null,
+  });
 }
 
 // Auto-seed on import

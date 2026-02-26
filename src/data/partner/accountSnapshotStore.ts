@@ -48,6 +48,20 @@ function seedDemoData(): void {
     primary_vendor_relationship: 'Microsoft (Azure, M365, Dynamics)',
     competitive_pressure_level: 'High — Otis & KONE accelerating AI investment',
   });
+
+  upsert({
+    focusId: 'fifa',
+    hubOrgId: 'helioworks',
+    industry: 'Sports Governance — Global Governing Body',
+    region: 'Global (HQ: Zurich, Switzerland)',
+    revenue_band: 'USD 7–8B (revenue cycle)',
+    employee_band: '1,500–2,000',
+    strategic_priority_tags: ['Digital Fan Engagement', 'AI Content Moderation', 'Global Platform Scaling', 'Data Protection'],
+    transformation_stage: 'Developing — digital platform expansion',
+    maturity_level: 'Developing (AI experimentation phase)',
+    primary_vendor_relationship: 'Not available yet.',
+    competitive_pressure_level: 'Medium — UEFA and other confederations investing in digital',
+  });
 }
 
 seedDemoData();

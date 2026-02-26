@@ -7,6 +7,7 @@ import type { BusinessPlayPackage, BusinessVariant } from '@/data/partner/busine
 import { CollapsibleSection } from '@/components/shared/CollapsibleSection';
 import type { SelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 import { getSignal } from '@/data/partner/signalStore';
+import { getStakeholdersByPersona, type PersonaKey } from '@/data/partner/stakeholderStore';
 import {
   type PovMode,
   deriveDefaultPov,
@@ -158,6 +159,13 @@ const PERSONA_MAP: Record<string, string> = {
   procurement: 'Procurement',
 };
 
+/** Map persona tab key → stakeholderStore PersonaKey */
+const PERSONA_TO_STORE_KEY: Record<string, PersonaKey> = {
+  cio: 'cio_vp_engineering',
+  cfo: 'cfo_finance',
+  procurement: 'procurement',
+};
+
 function classifyPersona(persona: string): string {
   const p = persona.toLowerCase();
   if (p.includes('cio') || p.includes('vp') || p.includes('engineering') || p.includes('cto') || p.includes('head of tech')) return 'cio';
@@ -169,7 +177,7 @@ function classifyPersona(persona: string): string {
 interface TalkTrackItem { persona: string; message: string; }
 interface DiscoveryItem { theme: string; question: string; }
 
-function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], activePov }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[]; driverLabels?: string[]; activePov?: PovMode }) {
+function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], activePov, focusId }: { talkTracks: TalkTrackItem[]; discoveryAgenda: DiscoveryItem[]; driverLabels?: string[]; activePov?: PovMode; focusId?: string }) {
   // Reorder talk tracks by POV if active
   const orderedTracks = useMemo(() => activePov ? reorderTalkTracks(talkTracks, activePov) : talkTracks, [talkTracks, activePov]);
   const grouped = orderedTracks.reduce<Record<string, TalkTrackItem[]>>((acc, tt) => {
@@ -182,6 +190,18 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], acti
   const [activePersona, setActivePersona] = useState(personaKeys[0] ?? '');
   const [showDiscovery, setShowDiscovery] = useState(false);
   const [showChallenger, setShowChallenger] = useState(false);
+
+  // Resolve primary stakeholder for active persona
+  const primaryStakeholder = useMemo(() => {
+    if (!focusId || !activePersona) return null;
+    const storeKey = PERSONA_TO_STORE_KEY[activePersona];
+    if (!storeKey) return null;
+    const matches = getStakeholdersByPersona(focusId, storeKey);
+    if (matches.length === 0) return null;
+    const first = matches[0];
+    if (first.name === 'DATA_NEEDED') return null;
+    return first;
+  }, [focusId, activePersona]);
 
   if (personaKeys.length === 0) {
     return (
@@ -220,6 +240,11 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], acti
           <p className="text-[10px] font-semibold text-foreground flex items-center gap-1.5 pb-1 border-b border-border/30 mb-1">
             <Users className="w-3 h-3 text-primary/50" />
             {PERSONA_MAP[activePersona]}
+          </p>
+          <p className="text-[10px] text-muted-foreground/70 mb-1">
+            Primary stakeholder: {primaryStakeholder
+              ? <span className="text-foreground font-medium">{primaryStakeholder.name} — {primaryStakeholder.title}</span>
+              : <span className="italic">Not available yet.</span>}
           </p>
           {tracks.map((tt, i) => (
             <p key={i} className="text-[10px] text-muted-foreground leading-snug line-clamp-2">{truncate(tt.message, 160)}</p>
@@ -745,7 +770,7 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         <p className="text-[13px] font-semibold text-foreground">Customer engagement</p>
 
         {/* 1. Stakeholders & messaging — Card Tabs UI */}
-        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} activePov={activePov} />
+        <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} activePov={activePov} focusId={focusId} />
 
         {/* 2. Objection handling (LAER) */}
         <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>

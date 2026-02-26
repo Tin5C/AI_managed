@@ -192,6 +192,7 @@ function ReadinessCompact({ score }: { score: number }) {
 const SECTIONS = [
   { id: 'ai-exec-summary', label: 'Executive State' },
   { id: 'ai-signals', label: 'This Week' },
+  { id: 'ai-stakeholder', label: 'Stakeholder' },
   { id: 'ai-initiatives', label: 'Initiatives' },
   { id: 'ai-trends', label: 'Trends' },
   { id: 'ai-commercial', label: 'Commercial' },
@@ -381,6 +382,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
   const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
     'ai-exec-summary': null,
     'ai-signals': null,
+    'ai-stakeholder': null,
     'ai-initiatives': null,
     'ai-trends': null,
     'ai-commercial': null,
@@ -470,6 +472,11 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
   const filteredInitiatives = useMemo(() => {
     return publicInitiatives?.public_it_initiatives ?? [];
   }, [publicInitiatives]);
+
+  // Stakeholder updates — hiring signals from the same signalHistory
+  const stakeholderSignals = useMemo(() => {
+    return signalHistory.filter((s) => s.description.toLowerCase().includes('hiring'));
+  }, [signalHistory]);
 
   const filteredTrends = useMemo(() => {
     return industryAuthorityTrends?.trends ?? [];
@@ -713,6 +720,53 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
                 </div>
               ))}
             </div>
+          )}
+        </DocSection>
+
+        {/* SECTION 2b: Stakeholder Updates (hiring signals) */}
+        <DocSection
+          id="ai-stakeholder"
+          title="Stakeholder Updates"
+          icon={<Users className="w-3.5 h-3.5" />}
+          count={stakeholderSignals.length}
+          isOpen={openSection === 'ai-stakeholder'}
+          onToggle={() => toggleSection('ai-stakeholder')}
+          sectionRef={(el) => { sectionRefs.current['ai-stakeholder'] = el; }}
+        >
+          {stakeholderSignals.length > 0 ? (
+            <div className="space-y-2">
+              {stakeholderSignals.map((sig) => (
+                <div key={sig.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/10 border border-border/30">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <p className="text-xs font-medium text-foreground">{sig.description}</p>
+                    {sig.implication && (
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">{sig.implication}</p>
+                    )}
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      <CategoryBadge category={sig.category} />
+                      {sig.impact_level && <ConfidenceBadge level={sig.impact_level} />}
+                    </div>
+                  </div>
+                  <UseDealPlanButton onClick={() => {
+                    if (!focusId) return;
+                    addItem(focusId, {
+                      id: makeInboxItemId(focusId, 'signal', sig.id),
+                      focusId,
+                      source_type: 'signal',
+                      source_id: sig.id,
+                      title: sig.description,
+                      why_now: (sig.implication ?? sig.description).slice(0, 160),
+                      impact_area: deriveImpactArea(sig.category),
+                      tags: [sig.category ?? 'stakeholder'],
+                      created_at: new Date().toISOString(),
+                    });
+                    toast.success('Added to Deal Planning Inbox');
+                  }} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/60">Not available yet.</p>
           )}
         </DocSection>
 

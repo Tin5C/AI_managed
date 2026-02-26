@@ -52,8 +52,14 @@ import {
 import { addMemoryItem } from '@/data/partner/accountMemoryStore';
 import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
 
+const AI_ACCOUNTS = [
+  { id: 'schindler', label: 'Schindler' },
+  { id: 'fifa', label: 'FIFA' },
+];
+
 interface AccountIntelligenceViewProps {
   focusId: string | null;
+  onFocusIdChange?: (nextFocusId: string) => void;
 }
 
 /* ─── Shared small helpers ─── */
@@ -349,7 +355,7 @@ function ExpandableRow({
 
 /* ─── Main View ─── */
 
-export function AccountIntelligenceView({ focusId }: AccountIntelligenceViewProps) {
+export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountIntelligenceViewProps) {
   const vm = useMemo<AccountIntelligenceVM | null>(() => {
     if (!focusId) return null;
     return resolveAccountIntelligence({ focusId, weekOf: '2026-02-10' });
@@ -491,7 +497,19 @@ export function AccountIntelligenceView({ focusId }: AccountIntelligenceViewProp
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Building2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <h1 className="text-base font-bold text-foreground truncate">{accountName}</h1>
+            {onFocusIdChange ? (
+              <select
+                value={focusId ?? ''}
+                onChange={(e) => onFocusIdChange(e.target.value)}
+                className="text-base font-bold text-foreground bg-transparent border-none outline-none cursor-pointer pr-1 truncate"
+              >
+                {AI_ACCOUNTS.map((a) => (
+                  <option key={a.id} value={a.id}>{a.label}</option>
+                ))}
+              </select>
+            ) : (
+              <h1 className="text-base font-bold text-foreground truncate">{accountName}</h1>
+            )}
             <ReadinessCompact score={readiness.score} />
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

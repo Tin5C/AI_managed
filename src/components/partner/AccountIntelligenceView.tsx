@@ -3,6 +3,7 @@
 // AI Lens toggle filters display only; no store mutations.
 
 import { useMemo, useState, useCallback, useRef } from 'react';
+import { toIsoWeekKeyFromWeekOf } from '@/lib/partnerIds';
 import {
   Building2,
   DollarSign,
@@ -262,6 +263,11 @@ function DocSection({
 
 type SignalQuickFilter = 'all' | 'ai' | 'regulatory' | 'commercial' | 'technical';
 
+const THIS_WEEK_OF = '2026-02-10';
+const LAST_WEEK_OF = '2026-02-03';
+type WeekToggle = 'this' | 'last';
+const WEEK_TOGGLE_LABELS: Record<WeekToggle, string> = { this: 'This week', last: 'Last week' };
+
 const SIGNAL_FILTERS: { value: SignalQuickFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'ai', label: 'AI' },
@@ -369,6 +375,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
   const [commercialTab, setCommercialTab] = useState<CommercialTab>('licenses');
   const [techTab, setTechTab] = useState<TechTab>('vendors');
   const [expandedEvidence, setExpandedEvidence] = useState<EvidenceCategory | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<WeekToggle>('this');
   const [expandedEvidenceItemId, setExpandedEvidenceItemId] = useState<string | null>(null);
   
   const [expandedInitiative, setExpandedInitiative] = useState<string | null>(null);
@@ -445,7 +452,13 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
   const proofArtifacts = vm?.proofArtifacts ?? null;
   const industryAuthorityTrends = vm?.industryAuthorityTrends ?? null;
   const industryNews = vm?.industryNews ?? null;
-  const signalHistory = vm?.signalHistory ?? [];
+  const allSignalHistory = vm?.signalHistory ?? [];
+  const activeWeekOf = selectedWeek === 'this' ? THIS_WEEK_OF : LAST_WEEK_OF;
+  const activeWeekKey = toIsoWeekKeyFromWeekOf(activeWeekOf);
+  const signalHistory = useMemo(
+    () => allSignalHistory.filter((s) => s.weekKey === activeWeekKey),
+    [allSignalHistory, activeWeekKey],
+  );
   const inbox = vm?.inbox ?? [];
   const requests = vm?.requests ?? [];
   const readiness = vm?.readiness ?? { score: 0, pillars: {} as any };
@@ -629,6 +642,27 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
           title="This Week Signals"
           icon={<Zap className="w-3.5 h-3.5" />}
           count={signalHistory.length}
+          badge={
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground/50">Week of {activeWeekOf}</span>
+              <div className="flex items-center rounded-md border border-border bg-muted/30 p-0.5">
+                {(['this', 'last'] as WeekToggle[]).map((w) => (
+                  <button
+                    key={w}
+                    onClick={(e) => { e.stopPropagation(); setSelectedWeek(w); }}
+                    className={cn(
+                      'px-2 py-0.5 rounded text-[10px] font-medium transition-colors',
+                      selectedWeek === w
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {WEEK_TOGGLE_LABELS[w]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          }
           isOpen={openSection === 'ai-signals'}
           onToggle={() => toggleSection('ai-signals')}
           sectionRef={(el) => { sectionRefs.current['ai-signals'] = el; }}

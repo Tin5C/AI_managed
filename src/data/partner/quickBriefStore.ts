@@ -1,6 +1,7 @@
 // QuickBrief store — links 5 signals for a focus+week
 
 import { resolveWeekAlias } from './weeklySignalStore';
+import { listSignals } from './signalStore';
 
 export interface QuickBrief {
   id: string;
@@ -48,6 +49,31 @@ export function createQuickBrief(payload: Omit<QuickBrief, 'id' | 'createdAt'>):
   return record;
 }
 
+// ---------- Hiring signal enforcement ----------
+
+function isHiringSignal(title: string): boolean {
+  return title.toLowerCase().includes('hiring');
+}
+
+/**
+ * Ensure the 5-id tuple includes a hiring signal (if one exists for the focus+week).
+ * Replaces the last element if a hiring signal is available but not already present.
+ */
+function enforceHiringInclusion(
+  signalIds: [string, string, string, string, string],
+  focusId: string,
+  weekOf: string,
+): [string, string, string, string, string] {
+  const allSignals = listSignals(focusId, weekOf);
+  const hiringSignal = allSignals.find((s) => isHiringSignal(s.title));
+  if (!hiringSignal) return signalIds;
+  if (signalIds.includes(hiringSignal.id)) return signalIds;
+  // Replace the last element with the hiring signal id
+  const result: [string, string, string, string, string] = [...signalIds];
+  result[4] = hiringSignal.id;
+  return result;
+}
+
 // Seed
 const SEED: Omit<QuickBrief, 'id' | 'createdAt'> = {
   focusId: 'schindler',
@@ -77,10 +103,16 @@ const SEED_FIFA: Omit<QuickBrief, 'id' | 'createdAt'> = {
 
 export function seedQuickBriefs(): void {
   if (!store.find((q) => q.focusId === SEED.focusId && q.weekOf === SEED.weekOf)) {
-    createQuickBrief(SEED);
+    createQuickBrief({
+      ...SEED,
+      signalIds: enforceHiringInclusion(SEED.signalIds, SEED.focusId, SEED.weekOf),
+    });
   }
   if (!store.find((q) => q.focusId === SEED_FIFA.focusId && q.weekOf === SEED_FIFA.weekOf)) {
-    createQuickBrief(SEED_FIFA);
+    createQuickBrief({
+      ...SEED_FIFA,
+      signalIds: enforceHiringInclusion(SEED_FIFA.signalIds, SEED_FIFA.focusId, SEED_FIFA.weekOf),
+    });
   }
 }
 

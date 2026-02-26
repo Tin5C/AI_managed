@@ -44,8 +44,10 @@ const ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
   label: e.name,
 }));
 
-const WEEK_OF = '2026-02-10';
-const TIME_KEY = '2026-W07';
+const THIS_WEEK_OF = '2026-02-10';
+const LAST_WEEK_OF = '2026-02-03';
+type WeekToggle = 'this' | 'last';
+const WEEK_LABELS: Record<WeekToggle, string> = { this: 'This week', last: 'Last week' };
 const BATCH_SIZE = 5;
 
 type BriefMode = 'curated' | 'on-demand';
@@ -88,6 +90,7 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
   const [triggeredFrom, setTriggeredFrom] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<WeekToggle>('this');
 
   // On-Demand state
   const [onDemandQuery, setOnDemandQuery] = useState('');
@@ -100,10 +103,10 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
     if (ctx) {
       if (import.meta.env.DEV) {
         const devFocusId = selectedAccount ?? ACCOUNTS[0].id;
-        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId: devFocusId, weekOf: WEEK_OF });
+        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId: devFocusId, weekOf: THIS_WEEK_OF });
         console.log('[Quick Brief launch]', {
           focusId: meta.focusId,
-          weekOf: WEEK_OF,
+          weekOf: THIS_WEEK_OF,
           weekKey: meta.weekKey,
           vendorId: meta.vendorId,
         });
@@ -137,8 +140,9 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
 
   // Signal data for selected account
   const focusId = selectedAccount ?? ACCOUNTS[0].id;
-  const canonicalWeekKey = useMemo(() => toIsoWeekKey({ weekOf: WEEK_OF }), []);
-  const rawSignals = useMemo(() => listSignals(focusId, WEEK_OF), [focusId]);
+  const weekOf = selectedWeek === 'this' ? THIS_WEEK_OF : LAST_WEEK_OF;
+  const canonicalWeekKey = useMemo(() => toIsoWeekKey({ weekOf }), [weekOf]);
+  const rawSignals = useMemo(() => listSignals(focusId, weekOf), [focusId, weekOf]);
   const signals = useMemo(() => enrichSignals(rawSignals, focusId), [rawSignals, focusId]);
 
   const canGenerate = selectedAccount !== null;
@@ -361,13 +365,33 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
                   </h3>
                   <BriefingModePill mode="curated" />
                 </div>
-                <button
-                  onClick={handleReset}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  New brief
-                </button>
+                <div className="flex items-center gap-3">
+                  {/* Week toggle */}
+                  <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
+                    {(['this', 'last'] as WeekToggle[]).map((w) => (
+                      <button
+                        key={w}
+                        onClick={() => { setSelectedWeek(w); setVisibleCount(BATCH_SIZE); }}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors',
+                          selectedWeek === w
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        {WEEK_LABELS[w]}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleReset}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    New brief
+                  </button>
+                </div>
               </div>
+              <p className="text-[10px] text-muted-foreground">Week of {weekOf}</p>
 
               {triggeredFrom && (
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1">

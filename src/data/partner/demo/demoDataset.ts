@@ -62,6 +62,28 @@ export const DEMO_FOCUS_ENTITIES: FocusEntity[] = [
       ],
     },
   },
+  {
+    id: 'fifa',
+    name: 'FIFA',
+    industry: 'Sports / Global Governing Body',
+    region: 'Global (HQ: Zurich)',
+    description: 'International governing body of football with 211 member associations, headquartered in Zurich.',
+    touchpointContext: {
+      lastTouchpoint: {
+        date: '2026-02-04',
+        summary: 'Introductory call with Head of Digital — interest in governance tooling and World Cup 2026 readiness.',
+      },
+      nextMeeting: {
+        date: '2026-02-18',
+        summary: 'Discovery session with CTO office — technology strategy alignment for 2026 scaling.',
+      },
+      keyAttendees: [
+        { name: 'Luca Martinelli', role: 'Head of Digital' },
+        { name: 'Priya Sharma', role: 'CTO' },
+        { name: 'Jean-Marc Dupont', role: 'Head of Procurement' },
+      ],
+    },
+  },
 ];
 
 // ============= Demo Context =============

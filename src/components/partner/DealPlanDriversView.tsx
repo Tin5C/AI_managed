@@ -104,6 +104,7 @@ const ACCOUNTS = [
   { id: 'schindler', label: 'Schindler' },
   { id: 'sulzer', label: 'Sulzer' },
   { id: 'ubs', label: 'UBS' },
+  { id: 'fifa', label: 'FIFA' },
 ];
 
 type ViewTab = 'business' | 'technical';

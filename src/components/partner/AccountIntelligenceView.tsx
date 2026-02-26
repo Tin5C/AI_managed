@@ -52,10 +52,12 @@ import {
 import { addMemoryItem } from '@/data/partner/accountMemoryStore';
 import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
 
-const AI_ACCOUNTS = [
-  { id: 'schindler', label: 'Schindler' },
-  { id: 'fifa', label: 'FIFA' },
-];
+import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
+
+const AI_ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
+  id: e.id.replace(/^focus-/, ''),
+  label: e.name,
+}));
 
 interface AccountIntelligenceViewProps {
   focusId: string | null;

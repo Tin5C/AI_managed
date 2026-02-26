@@ -36,13 +36,13 @@ import {
   deriveImpactArea,
 } from '@/data/partner/dealPlanningInboxStore';
 import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
+import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
 
-const ACCOUNTS = [
-  { id: 'schindler', label: 'Schindler' },
-  { id: 'fifa', label: 'FIFA' },
-  { id: 'sulzer', label: 'Sulzer' },
-  { id: 'ubs', label: 'UBS' },
-];
+/** Derive account options from the single source of truth (DEMO_FOCUS_ENTITIES) */
+const ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
+  id: e.id.replace(/^focus-/, ''),
+  label: e.name,
+}));
 
 const WEEK_OF = '2026-02-10';
 const TIME_KEY = '2026-W07';
@@ -201,8 +201,21 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
     toast.success('Added to Deal Planning');
   };
 
-  // Visible signals (paginated)
-  const visibleSignals = signals.slice(0, visibleCount);
+  // Visible signals (paginated) — with hiring enforcement
+  const visibleSignals = useMemo(() => {
+    const page = signals.slice(0, visibleCount);
+    // Enforce: if a hiring signal exists and isn't already visible, swap into last position
+    const hasHiring = page.some((s) => s.title.toLowerCase().includes('hiring'));
+    if (!hasHiring) {
+      const hiringSignal = signals.find((s) => s.title.toLowerCase().includes('hiring'));
+      if (hiringSignal && page.length > 0) {
+        const result = [...page];
+        result[result.length - 1] = hiringSignal;
+        return result;
+      }
+    }
+    return page;
+  }, [signals, visibleCount]);
   const hasMore = signals.length > visibleCount;
 
   const customerName = selectedAccount

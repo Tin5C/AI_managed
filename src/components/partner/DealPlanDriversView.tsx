@@ -97,15 +97,15 @@ import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/Busin
 import { TechnicalPlayPackView } from '@/partner/components/dealPlanning/TechnicalPlayPackView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
 import { getDealPlanningSelection, setDealPlanningSelection, getSelectionContext } from '@/data/partner/dealPlanningSelectionStore';
+import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
 
 const WEEK_OF = '2026-02-10';
 
-const ACCOUNTS = [
-  { id: 'schindler', label: 'Schindler' },
-  { id: 'sulzer', label: 'Sulzer' },
-  { id: 'ubs', label: 'UBS' },
-  { id: 'fifa', label: 'FIFA' },
-];
+/** Derive account options from the single source of truth (DEMO_FOCUS_ENTITIES) */
+const ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
+  id: e.id.replace(/^focus-/, ''),
+  label: e.name,
+}));
 
 type ViewTab = 'business' | 'technical';
 

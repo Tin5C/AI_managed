@@ -62,9 +62,25 @@ const SEED: Omit<QuickBrief, 'id' | 'createdAt'> = {
   contextUsed: 'last touchpoint + upcoming meeting (simulated)',
 };
 
+const SEED_FIFA: Omit<QuickBrief, 'id' | 'createdAt'> = {
+  focusId: 'fifa',
+  weekOf: '2026-02-10',
+  signalIds: [
+    'sig-fifa-001',
+    'sig-fifa-002',
+    'sig-fifa-003',
+    'sig-fifa-004',
+    'sig-fifa-005',
+  ],
+  contextUsed: 'public signals + discovery gap (simulated)',
+};
+
 export function seedQuickBriefs(): void {
   if (!store.find((q) => q.focusId === SEED.focusId && q.weekOf === SEED.weekOf)) {
     createQuickBrief(SEED);
+  }
+  if (!store.find((q) => q.focusId === SEED_FIFA.focusId && q.weekOf === SEED_FIFA.weekOf)) {
+    createQuickBrief(SEED_FIFA);
   }
 }
 

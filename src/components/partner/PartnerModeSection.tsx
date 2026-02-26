@@ -17,10 +17,11 @@ import { DEAL_PLAN_TRIGGER_EVENT } from '@/data/partner/dealPlanTrigger';
 
 export type PartnerMode = 'quick-brief' | 'deal-planning' | 'account-intelligence';
 
-const FOCUS_ID = 'schindler'; // demo default
+const DEFAULT_FOCUS_ID = 'schindler';
 
 export function PartnerModeSection() {
   const [mode, setMode] = useState<PartnerMode>('quick-brief');
+  const [aiFocusId, setAiFocusId] = useState(DEFAULT_FOCUS_ID);
 
   // Listen for deal-plan trigger from story viewer or quick brief — only switch mode, do NOT consume context
   useEffect(() => {
@@ -105,7 +106,7 @@ export function PartnerModeSection() {
           <DealPlanDriversView onGoToQuickBrief={() => setMode('quick-brief')} onGoToAccountIntelligence={() => setMode('account-intelligence')} />
         </div>
       ) : (
-        <AccountIntelligenceView focusId={FOCUS_ID} />
+        <AccountIntelligenceView focusId={aiFocusId} onFocusIdChange={setAiFocusId} />
       )}
     </section>
   );

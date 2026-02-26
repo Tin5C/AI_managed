@@ -39,6 +39,7 @@ import { setDealPlanTrigger } from '@/data/partner/dealPlanTrigger';
 
 const ACCOUNTS = [
   { id: 'schindler', label: 'Schindler' },
+  { id: 'fifa', label: 'FIFA' },
   { id: 'sulzer', label: 'Sulzer' },
   { id: 'ubs', label: 'UBS' },
 ];
@@ -98,8 +99,8 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
     const ctx = consumeQuickBriefTrigger();
     if (ctx) {
       if (import.meta.env.DEV) {
-        const focusId = 'schindler';
-        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId, weekOf: WEEK_OF });
+        const devFocusId = selectedAccount ?? ACCOUNTS[0].id;
+        const meta = ctx.canonicalMeta ?? resolveCanonicalMeta({ focusId: devFocusId, weekOf: WEEK_OF });
         console.log('[Quick Brief launch]', {
           focusId: meta.focusId,
           weekOf: WEEK_OF,
@@ -135,7 +136,7 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
   }, []);
 
   // Signal data for selected account
-  const focusId = selectedAccount ?? 'schindler';
+  const focusId = selectedAccount ?? ACCOUNTS[0].id;
   const canonicalWeekKey = useMemo(() => toIsoWeekKey({ weekOf: WEEK_OF }), []);
   const rawSignals = useMemo(() => listSignals(focusId, WEEK_OF), [focusId]);
   const signals = useMemo(() => enrichSignals(rawSignals, focusId), [rawSignals, focusId]);

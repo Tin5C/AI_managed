@@ -96,7 +96,7 @@ import '@/data/partner/demo/businessPlayPackagesSeed';
 import { BusinessPlayPackageView } from '@/partner/components/dealPlanning/BusinessPlayPackageView';
 import { TechnicalPlayPackView } from '@/partner/components/dealPlanning/TechnicalPlayPackView';
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
-import { getDealPlanningSelection, getSelectionContext } from '@/data/partner/dealPlanningSelectionStore';
+import { getDealPlanningSelection, setDealPlanningSelection, getSelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 
 const WEEK_OF = '2026-02-10';
 
@@ -369,14 +369,18 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   const [engagementType, setEngagementType] = useState<EngagementType | null>(null);
   const [motion, setMotion] = useState<Motion | null>(null);
 
-  // Apply preselected type/motion when account changes
+  // Apply preselected type/motion when account changes; ensure defaults exist
   useEffect(() => {
     if (!selectedAccount) return;
     const sel = getDealPlanningSelection(selectedAccount);
-    if (sel) {
-      setEngagementType(sel.type as EngagementType);
-      setMotion(sel.motion as Motion);
+    const effectiveType = sel?.type || 'New Logo';
+    const effectiveMotion = sel?.motion || 'Strategic Pursuit';
+    // Persist defaults so package lookup keys always match seeded data
+    if (!sel?.type || !sel?.motion) {
+      setDealPlanningSelection(selectedAccount, { type: effectiveType, motion: effectiveMotion });
     }
+    setEngagementType(effectiveType as EngagementType);
+    setMotion(effectiveMotion as Motion);
   }, [selectedAccount]);
 
   // Auto-generate plan when account is selected
@@ -839,13 +843,6 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
             focusSignal={focusSignal}
             onClearFocus={() => {
               setFocusSignal(null);
-              if (selectedAccount) {
-                const currentIds = getActiveSignalIds(selectedAccount);
-                if (currentIds.length <= 1) {
-                  addActiveSignal(selectedAccount, 'sig-sch-finops-ai');
-                  addActiveSignal(selectedAccount, 'sig-sch-ai-governance');
-                }
-              }
               refresh();
             }}
             focusTrend={focusTrend}

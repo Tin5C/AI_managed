@@ -362,60 +362,98 @@ export function QuickBriefSection({ onOpenDealBrief }: QuickBriefSectionProps) {
                 </p>
               )}
 
-              {/* Signal cards — compact feed */}
-              <div className="space-y-2">
-                {visibleSignals.map((signal) => {
-                  const tag = TYPE_TAGS[signal.type] ?? signal.type;
-                  const tagColor = TYPE_COLORS[signal.type] ?? 'bg-muted text-muted-foreground border-border';
-
-                  return (
+              {/* Hero card — most actionable (first signal) */}
+              {visibleSignals.length > 0 && (() => {
+                const hero = visibleSignals[0];
+                const heroTag = TYPE_TAGS[hero.type] ?? hero.type;
+                const heroTagColor = TYPE_COLORS[hero.type] ?? 'bg-muted text-muted-foreground border-border';
+                return (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      Most actionable this week
+                    </p>
                     <div
-                      key={signal.id}
-                      className="flex items-start gap-3 p-3 rounded-xl border border-border/60 bg-card hover:border-primary/20 transition-colors"
+                      key={hero.id}
+                      className="p-4 rounded-xl border border-primary/25 bg-primary/[0.03] space-y-2"
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', tagColor)}>
-                            {tag}
-                          </span>
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border border-border/50 bg-muted/30 text-muted-foreground">
-                            {ORIGIN_LABELS[signal.type] ?? 'Industry'}
-                          </span>
-                          <span className={cn(
-                            'text-[10px] font-bold',
-                            signal.confidence >= 60 ? 'text-green-600' : 'text-primary'
-                          )}>
-                            {signal.confidence}%
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground leading-snug">
-                          {signal.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                          {signal.soWhat}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border', heroTagColor)}>
+                          {heroTag}
+                        </span>
                       </div>
+                      <p className="text-sm font-semibold text-foreground leading-snug">
+                        {hero.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {hero.soWhat}
+                      </p>
                       <button
                         onClick={() => {
                           setDealPlanTrigger({
-                            signalId: signal.id,
-                            signalTitle: signal.title,
+                            signalId: hero.id,
+                            signalTitle: hero.title,
                             customer: customerName,
                             focusId,
                             entry: 'quickbrief',
-                            tags: [signal.type],
+                            tags: [hero.type],
                           });
                           onOpenDealBrief?.();
                         }}
-                        className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 border border-border/40 hover:border-primary/20 transition-colors flex-shrink-0 self-start mt-1"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium text-primary hover:bg-primary/10 border border-primary/25 hover:border-primary/40 transition-colors"
                       >
                         <ArrowUpRight className="w-3 h-3" />
                         Deal Plan
                       </button>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })()}
+
+              {/* Compact rows — remaining signals */}
+              {visibleSignals.length > 1 && (
+                <div className="space-y-1">
+                  {visibleSignals.slice(1).map((signal) => {
+                    const tag = TYPE_TAGS[signal.type] ?? signal.type;
+                    const tagColor = TYPE_COLORS[signal.type] ?? 'bg-muted text-muted-foreground border-border';
+
+                    return (
+                      <div
+                        key={signal.id}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border/40 bg-card hover:border-primary/20 transition-colors"
+                      >
+                        <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full border flex-shrink-0', tagColor)}>
+                          {tag}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground leading-snug truncate">
+                            {signal.title}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {signal.soWhat}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setDealPlanTrigger({
+                              signalId: signal.id,
+                              signalTitle: signal.title,
+                              customer: customerName,
+                              focusId,
+                              entry: 'quickbrief',
+                              tags: [signal.type],
+                            });
+                            onOpenDealBrief?.();
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 border border-border/40 hover:border-primary/20 transition-colors flex-shrink-0"
+                        >
+                          <ArrowUpRight className="w-3 h-3" />
+                          Deal Plan
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Show 5 more */}
               {hasMore && (

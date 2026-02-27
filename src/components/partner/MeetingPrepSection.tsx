@@ -19,6 +19,7 @@ import {
   Award,
   Users,
   X,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
@@ -27,6 +28,11 @@ import * as publicInitiativesStore from '@/data/partner/publicInitiativesStore';
 import * as industryAuthorityTrendsStore from '@/data/partner/industryAuthorityTrendsStore';
 import { listMemoryItems } from '@/data/partner/accountMemoryStore';
 import { listStakeholders } from '@/data/partner/stakeholderStore';
+import {
+  listVendorIntelByFocusAndWeek,
+  type VendorIntelItem,
+  type VendorIntelItemType,
+} from '@/data/partner/vendorIntelStore';
 
 // ============= Constants =============
 
@@ -564,6 +570,9 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
             <PrepSection icon={<AlertTriangle className="w-3 h-3" />} title="Risks / Objections" items={output.risksObjections} />
             <PrepSection icon={<Award className="w-3 h-3" />} title="Proof / KPIs" items={output.proofKPIs} />
 
+            {/* Vendor Intel */}
+            <VendorIntelSection focusId={focusId} weekOf={weekOf} />
+
             {/* Sources (collapsed) */}
             <SourcesSection
               sources={output.sources}
@@ -622,6 +631,53 @@ function SourcesSection({ sources, contextProvided }: { sources: string[]; conte
           )}
         </ul>
       )}
+    </div>
+  );
+}
+
+const VENDOR_INTEL_CATEGORIES: { type: VendorIntelItemType; label: string }[] = [
+  { type: 'update', label: 'Latest updates' },
+  { type: 'reference_case', label: 'Reference cases' },
+  { type: 'kpi', label: 'KPIs' },
+  { type: 'pitch_drill', label: 'Pitch drills' },
+];
+
+function VendorIntelSection({ focusId, weekOf }: { focusId: string; weekOf: string }) {
+  const items = listVendorIntelByFocusAndWeek(focusId, weekOf, 'microsoft');
+  const allItems = items.length > 0 ? items : listVendorIntelByFocusAndWeek(focusId, weekOf);
+
+  const byType = (type: VendorIntelItemType) => allItems.filter((i) => i.type === type);
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+        <Zap className="w-3 h-3 text-primary" />
+        Vendor Intel (Microsoft)
+      </p>
+      <div className="space-y-1">
+        {VENDOR_INTEL_CATEGORIES.map(({ type, label }) => {
+          const cat = byType(type);
+          return (
+            <div key={type}>
+              <p className="text-[10px] font-medium text-muted-foreground/80 pl-3">{label}</p>
+              {cat.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground/50 pl-3 italic">Not available yet.</p>
+              ) : (
+                <ul className="space-y-0.5">
+                  {cat.map((item) => (
+                    <li key={item.id} className="text-xs leading-relaxed pl-3 border-l-2 border-primary/20 text-foreground">
+                      <span className="font-medium">{item.title}</span>
+                      {item.summary && (
+                        <span className="text-muted-foreground"> — {item.summary}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

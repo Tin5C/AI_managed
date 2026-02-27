@@ -98,6 +98,7 @@ import { TechnicalPlayPackView } from '@/partner/components/dealPlanning/Technic
 import { ensureSchindlerDefaults } from '@/data/partner/demo/schindlerDefaults';
 import { getDealPlanningSelection, setDealPlanningSelection, getSelectionContext } from '@/data/partner/dealPlanningSelectionStore';
 import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
+import { DealPlanAskMode } from './DealPlanAskMode';
 
 const WEEK_OF = '2026-02-10';
 
@@ -107,6 +108,7 @@ const ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
   label: e.name,
 }));
 
+type DealMode = 'structured' | 'ask';
 type ViewTab = 'business' | 'technical';
 
 interface DealPlanDriversViewProps {
@@ -316,6 +318,7 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
   useEffect(() => { ensureSchindlerDefaults(); }, []);
 
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [dealMode, setDealMode] = useState<DealMode>('structured');
 
   // Quick Brief focus mode state
   const [focusSignal, setFocusSignal] = useState<{ id: string; title: string } | null>(null);
@@ -627,9 +630,35 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
         <Brain className="w-5 h-5 text-primary" />
         <h3 className="text-base font-semibold text-foreground">Deal Planning</h3>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Account</span>
-        <AccountSelector selectedId={selectedAccount} onSelect={setSelectedAccount} />
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Account</span>
+          <AccountSelector selectedId={selectedAccount} onSelect={setSelectedAccount} />
+        </div>
+        <div className="inline-flex rounded-lg bg-muted/50 p-0.5 border border-border/60">
+          <button
+            onClick={() => setDealMode('structured')}
+            className={cn(
+              'px-3 py-1 rounded-md text-[11px] font-medium transition-all',
+              dealMode === 'structured'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Structured
+          </button>
+          <button
+            onClick={() => setDealMode('ask')}
+            className={cn(
+              'px-3 py-1 rounded-md text-[11px] font-medium transition-all',
+              dealMode === 'ask'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Ask
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -718,8 +747,13 @@ export function DealPlanDriversView({ onGoToQuickBrief, onGoToAccountIntelligenc
 
       {/* Generate Plan removed — auto-generates when account is selected */}
 
-      {/* Plan workspace */}
-      {planGenerated && (<>
+      {/* Ask mode */}
+      {dealMode === 'ask' && (
+        <DealPlanAskMode focusId={selectedAccount} />
+      )}
+
+      {/* Plan workspace (Structured mode) */}
+      {dealMode === 'structured' && planGenerated && (<>
       <div className="space-y-4">
         {/* Main workspace (full-width — right rail removed) */}
         <div className="flex-1 min-w-0 space-y-4">

@@ -31,6 +31,7 @@ export { BriefTemplateSelector } from './BriefTemplateSelector';
 export { ContextRequestModal } from './ContextRequestModal';
 export { QuickBriefSection } from './QuickBriefSection';
 export { QuickBriefOutput } from './QuickBriefOutput';
+export { MeetingPrepSection } from './MeetingPrepSection';
 export { PartnerModeSection } from './PartnerModeSection';
 export { DealPlanDriversView } from './DealPlanDriversView';
 export { OnDemandBriefingsSection } from './OnDemandBriefingsSection';

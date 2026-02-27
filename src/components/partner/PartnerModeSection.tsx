@@ -2,9 +2,9 @@
 // Renders all three tabs as a unified execution section on the Partner homepage
 
 import { useState, useEffect } from 'react';
-import { Zap, Brain, Info, Building2 } from 'lucide-react';
+import { Briefcase, Brain, Info, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { QuickBriefSection } from './QuickBriefSection';
+import { MeetingPrepSection } from './MeetingPrepSection';
 import { DealPlanDriversView } from './DealPlanDriversView';
 import { AccountIntelligenceView } from './AccountIntelligenceView';
 import {
@@ -15,12 +15,12 @@ import {
 } from '@/components/ui/tooltip';
 import { DEAL_PLAN_TRIGGER_EVENT } from '@/data/partner/dealPlanTrigger';
 
-export type PartnerMode = 'quick-brief' | 'deal-planning' | 'account-intelligence';
+export type PartnerMode = 'meeting-prep' | 'deal-planning' | 'account-intelligence';
 
 const DEFAULT_FOCUS_ID = 'schindler';
 
 export function PartnerModeSection() {
-  const [mode, setMode] = useState<PartnerMode>('quick-brief');
+  const [mode, setMode] = useState<PartnerMode>('meeting-prep');
   const [aiFocusId, setAiFocusId] = useState(DEFAULT_FOCUS_ID);
 
   // Listen for deal-plan trigger from story viewer or quick brief — only switch mode, do NOT consume context
@@ -42,16 +42,16 @@ export function PartnerModeSection() {
       <div className="flex items-center justify-between">
         <div className="inline-flex rounded-xl bg-muted/50 p-1 border border-border">
           <button
-            onClick={() => setMode('quick-brief')}
+            onClick={() => setMode('meeting-prep')}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-              mode === 'quick-brief'
+              mode === 'meeting-prep'
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Zap className="w-4 h-4" />
-            Quick Brief
+            <Briefcase className="w-4 h-4" />
+            Meeting Prep
           </button>
           <button
             onClick={() => setMode('deal-planning')}
@@ -95,15 +95,15 @@ export function PartnerModeSection() {
       </div>
 
       {/* Mode Content */}
-      {mode === 'quick-brief' ? (
-        <QuickBriefSection onOpenDealBrief={handlePromoteToDealBrief} />
+      {mode === 'meeting-prep' ? (
+        <MeetingPrepSection onOpenDealBrief={handlePromoteToDealBrief} />
       ) : mode === 'deal-planning' ? (
         <div className={cn(
           "rounded-2xl border border-primary/20 bg-primary/[0.02]",
           "p-5 space-y-1"
         )}>
           <p className="text-[11px] text-muted-foreground tracking-wide">Active Deal Workspace</p>
-          <DealPlanDriversView onGoToQuickBrief={() => setMode('quick-brief')} onGoToAccountIntelligence={() => setMode('account-intelligence')} />
+          <DealPlanDriversView onGoToQuickBrief={() => setMode('meeting-prep')} onGoToAccountIntelligence={() => setMode('account-intelligence')} />
         </div>
       ) : (
         <AccountIntelligenceView focusId={aiFocusId} onFocusIdChange={setAiFocusId} />

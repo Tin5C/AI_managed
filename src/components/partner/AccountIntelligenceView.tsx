@@ -356,7 +356,7 @@ function ExpandableRow({
             )}
           </div>
           {!isExpanded && preview && (
-            <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5">{preview}</p>
+            <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">{preview}</p>
           )}
         </div>
         {!isExpanded && <TagsRow tags={tags} max={2} />}
@@ -778,20 +778,23 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
           onToggle={() => toggleSection('ai-stakeholder')}
           sectionRef={(el) => { sectionRefs.current['ai-stakeholder'] = el; }}
         >
-          {stakeholderSignals.length > 0 ? (
-            <div className="space-y-2">
+        {stakeholderSignals.length > 0 ? (
+            <div className="space-y-1">
               {stakeholderSignals.map((sig) => (
-                <div key={sig.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/10 border border-border/30">
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="text-xs font-medium text-foreground">{sig.description}</p>
-                    {sig.implication && (
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">{sig.implication}</p>
-                    )}
-                    <div className="flex items-center gap-1.5 pt-0.5">
-                      <CategoryBadge category={sig.category} />
-                      {sig.impact_level && <ConfidenceBadge level={sig.impact_level} />}
+                <div key={sig.id} className="rounded-md border border-border/30 hover:bg-muted/5 transition-colors">
+                  <div className="w-full flex items-center gap-2 px-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{sig.description}</p>
+                      {sig.implication && (
+                        <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">{sig.implication}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {sig.impact_level && <TagsRow tags={[sig.impact_level]} />}
+                      <TagsRow tags={[sig.category]} />
                     </div>
                   </div>
+                  <div className="flex justify-end px-3 pb-2">
                   <UseDealPlanButton onClick={() => {
                     if (!focusId) return;
                     addItem(focusId, {
@@ -807,6 +810,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
                     });
                     toast.success('Added to Deal Planning Inbox');
                   }} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -847,7 +851,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
                   key={init.id}
                   title={init.title}
                   preview={init.summary.slice(0, 100)}
-                  tags={init.technology_domain.filter((d) => d !== 'other')}
+                  tags={[init.confidence_level, ...init.technology_domain.filter((d) => d !== 'other')]}
                   isExpanded={expandedInitiative === init.id}
                   onToggle={() => setExpandedInitiative((prev) => prev === init.id ? null : init.id)}
                   dealPlanAction={
@@ -936,7 +940,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
                 <ExpandableRow
                   key={t.id}
                   title={t.trend_title}
-                  preview={t.applied_to_focus?.why_it_matters ?? t.thesis_summary.slice(0, 100)}
+                  preview={t.applied_to_focus?.why_it_matters ? `Account impact: ${t.applied_to_focus.why_it_matters}` : t.thesis_summary.slice(0, 100)}
                   sourceLabel={t.source_org}
                   tags={[t.confidence]}
                   isExpanded={expandedTrend === t.id}

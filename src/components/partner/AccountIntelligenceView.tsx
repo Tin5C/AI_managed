@@ -318,6 +318,7 @@ function ExpandableRow({
   title,
   preview,
   tags,
+  sourceLabel,
   isExpanded,
   onToggle,
   children,
@@ -326,6 +327,7 @@ function ExpandableRow({
   title: string;
   preview?: string;
   tags: string[];
+  sourceLabel?: string;
   isExpanded: boolean;
   onToggle: () => void;
   children: React.ReactNode;
@@ -345,7 +347,14 @@ function ExpandableRow({
           isExpanded && "rotate-90"
         )} />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-foreground truncate">{title}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium text-foreground truncate">{title}</p>
+            {!isExpanded && sourceLabel && (
+              <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                {sourceLabel}
+              </span>
+            )}
+          </div>
           {!isExpanded && preview && (
             <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5">{preview}</p>
           )}
@@ -913,7 +922,7 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
         {/* SECTION 4: Authority Trends (compact expandable rows) */}
         <DocSection
           id="ai-trends"
-          title="Authority-Backed Trends"
+          title="Account & Industry Trends"
           icon={<TrendingUp className="w-3.5 h-3.5" />}
           count={filteredTrends.length}
           badge={<span className="text-[9px] text-muted-foreground/50 mr-1">12-24 mo horizon</span>}
@@ -928,7 +937,8 @@ export function AccountIntelligenceView({ focusId, onFocusIdChange }: AccountInt
                   key={t.id}
                   title={t.trend_title}
                   preview={t.applied_to_focus?.why_it_matters ?? t.thesis_summary.slice(0, 100)}
-                  tags={[t.confidence, t.source_org]}
+                  sourceLabel={t.source_org}
+                  tags={[t.confidence]}
                   isExpanded={expandedTrend === t.id}
                   onToggle={() => setExpandedTrend((prev) => prev === t.id ? null : t.id)}
                   dealPlanAction={

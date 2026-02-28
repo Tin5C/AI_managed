@@ -24,9 +24,10 @@ import {
 import { cn } from '@/lib/utils';
 import { DEMO_FOCUS_ENTITIES } from '@/data/partner/demo/demoDataset';
 import { buildSignalPool, type PooledSignal } from '@/partner/data/dealPlanning/signalPool';
+import { CANONICAL_HUB_ORG_ID } from '@/lib/orgIdAliases';
 import * as publicInitiativesStore from '@/data/partner/publicInitiativesStore';
 import * as industryAuthorityTrendsStore from '@/data/partner/industryAuthorityTrendsStore';
-import { listMemoryItems } from '@/data/partner/accountMemoryStore';
+import { resolveAccountIntelligence } from '@/services/partner/accountIntelligence/resolver';
 import { listStakeholders } from '@/data/partner/stakeholderStore';
 import {
   listVendorIntelByFocusAndWeek,
@@ -86,9 +87,10 @@ function buildPrepOutput(
   focusId: string,
   slotIndices: number[],
 ): PrepOutput {
+  const acctIntel = resolveAccountIntelligence(focusId, { org_id: undefined, weekOf: WEEK_OF });
   const initiatives = publicInitiativesStore.getByFocusId(focusId);
   const trendsPack = industryAuthorityTrendsStore.getByFocusId(focusId);
-  const memory = listMemoryItems(focusId);
+  const memory = acctIntel.evidenceItems;
   const stakeholders = listStakeholders(focusId);
 
   const topSignals = slotIndices.map((i) => pool[i]).filter(Boolean);
@@ -183,7 +185,7 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
 
   const focusId = selectedAccount ?? ACCOUNTS[0].id;
   const weekOf = WEEK_OF;
-  const pool = useMemo(() => buildSignalPool(focusId, weekOf), [focusId, weekOf]);
+  const pool = useMemo(() => buildSignalPool(focusId, weekOf, CANONICAL_HUB_ORG_ID), [focusId, weekOf]);
 
   const canGenerate = selectedAccount !== null;
   const customerName = ACCOUNTS.find((a) => a.id === selectedAccount)?.label ?? '';

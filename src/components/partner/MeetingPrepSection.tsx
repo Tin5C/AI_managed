@@ -246,12 +246,12 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
       </div>
 
       <div className={cn(
-        'rounded-lg border border-border/60 bg-card',
+        'border-b border-border/50',
         generated && 'border-border',
       )}>
         {/* ===== Compact Control Row ===== */}
-        <div className="px-4 py-3 space-y-2.5">
-          {/* Row 1: Calendar (mock) + Account + Meeting Type */}
+        <div className="px-3 py-2 space-y-1.5">
+          {/* Controls: Calendar + Account + Meeting Type + Generate */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Calendar mock */}
             <div className="relative">
@@ -351,18 +351,15 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Row 2: Generate */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Generate button — compact */}
+            {/* Generate button — inline, compact */}
             <button
               onClick={handleGenerate}
               disabled={!canGenerate || isGenerating}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ml-auto',
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-all ml-auto',
                 canGenerate
-                  ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-[0.98]'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]'
                   : 'bg-muted text-muted-foreground cursor-not-allowed',
               )}
             >
@@ -371,19 +368,15 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
               ) : (
                 <Briefcase className="w-3 h-3" />
               )}
-              Generate Snapshot
+              Generate
             </button>
           </div>
 
-          {!canGenerate && !generated && (
-            <p className="text-[10px] text-muted-foreground">Select an account to generate your meeting prep.</p>
-          )}
-
           {/* ===== Add Context Accordion ===== */}
-          <div className="border-t border-border/40 pt-2">
+          <div className="pt-1">
             <button
               onClick={() => setContextOpen(!contextOpen)}
-              className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {contextOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               Add context
@@ -391,7 +384,7 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
             </button>
 
             {contextOpen && (
-              <div className="mt-2 space-y-3 pl-1">
+              <div className="mt-1.5 space-y-2 pl-1">
                 {/* Notes */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">

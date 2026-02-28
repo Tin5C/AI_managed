@@ -25,6 +25,7 @@ export interface PooledSignal {
 export function buildSignalPool(
   focusId: string,
   weekOf: string,
+  orgId?: string,
 ): PooledSignal[] {
   const pool = new Map<string, PooledSignal>();
 
@@ -76,7 +77,8 @@ export function buildSignalPool(
   }
 
   // 3) History — accountSignalStore (different schema, map to PooledSignal)
-  const historySignals = listAccountSignals('alpnova', { account_id: focusId });
+  const resolvedOrgId = orgId ?? 'helioworks';
+  const historySignals = listAccountSignals(resolvedOrgId, { account_id: focusId });
   for (const h of historySignals) {
     const existing = pool.get(h.id);
     if (existing) {

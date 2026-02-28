@@ -246,11 +246,11 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
       </div>
 
       <div className={cn(
-        'rounded-xl border border-border bg-card shadow-sm',
-        generated && 'border-primary/20',
+        'rounded-lg border border-border/60 bg-card',
+        generated && 'border-border',
       )}>
         {/* ===== Compact Control Row ===== */}
-        <div className="p-3 space-y-2.5">
+        <div className="px-4 py-3 space-y-2.5">
           {/* Row 1: Calendar (mock) + Account + Meeting Type */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Calendar mock */}
@@ -469,72 +469,81 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
 
         {/* ===== Generated Output ===== */}
         {generated && output && (
-          <div className="border-t border-border/50 p-4 space-y-4">
+          <div className="border-t border-border bg-muted/10">
             {/* Output header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  Meeting Prep — {customerName}
+                <h3 className="text-[13px] font-semibold text-foreground tracking-tight">
+                  {customerName} — {meetingType}
                 </h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {meetingType} · Week of {weekOf}
+                <p className="text-[10px] text-muted-foreground mt-0.5 tracking-wide">
+                  Week of {weekOf}
                 </p>
               </div>
               <button
                 onClick={() => { setGenerated(false); setSlotIndices([0, 1, 2]); }}
-                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                className="text-[10px] font-medium text-muted-foreground hover:text-foreground border border-border/50 rounded px-2 py-0.5 transition-colors"
               >
-                New prep
+                Reset
               </button>
             </div>
 
-            {/* TOP THINGS TO KNOW */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Target className="w-3 h-3 text-primary" />
-                Top Things to Know
-              </p>
-              <div className="space-y-1.5">
-                {output.topSignals.map((sig, idx) => (
-                  <div
-                    key={`${sig.id}-${slotIndices[idx]}`}
-                    className="flex items-center gap-2 p-2 rounded-lg border border-border/50 bg-muted/20"
-                  >
-                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{sig.title}</p>
-                      {sig.soWhat && (
-                        <p className="text-[10px] text-muted-foreground truncate">{sig.soWhat}</p>
+            {/* Content area */}
+            <div className="px-4 py-3 space-y-4">
+              {/* TOP THINGS TO KNOW */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold text-foreground uppercase tracking-widest">
+                  Top Things to Know
+                </p>
+                <div className="space-y-0">
+                  {output.topSignals.map((sig, idx) => (
+                    <div
+                      key={`${sig.id}-${slotIndices[idx]}`}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 border-b border-border/30 last:border-b-0',
+                        'hover:bg-muted/20 transition-colors',
                       )}
-                    </div>
-                    <button
-                      onClick={() => handleReplaceSignal(idx)}
-                      className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
-                      title="Replace signal"
                     >
-                      <RefreshCw className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                      <span className="text-[10px] font-semibold text-muted-foreground tabular-nums flex-shrink-0 w-4 text-center">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground leading-snug">{sig.title}</p>
+                        {sig.soWhat && (
+                          <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{sig.soWhat}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleReplaceSignal(idx)}
+                        className="p-1 rounded text-muted-foreground/50 hover:text-foreground transition-colors flex-shrink-0"
+                        title="Replace signal"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              <div className="border-t border-border/30" />
+
+              {/* Structured sections */}
+              <PrepSection icon={<MessageSquare className="w-3 h-3" />} title="Key Talking Points" items={output.talkingPoints} />
+              <PrepSection icon={<HelpCircle className="w-3 h-3" />} title="Questions to Ask" items={output.questionsToAsk} />
+              <PrepSection icon={<AlertTriangle className="w-3 h-3" />} title="Risks / Objections" items={output.risksObjections} />
+              <PrepSection icon={<Award className="w-3 h-3" />} title="Proof / KPIs" items={output.proofKPIs} />
+
+              <div className="border-t border-border/30" />
+
+              {/* Vendor Intel */}
+              <VendorIntelSection focusId={focusId} weekOf={weekOf} />
+
+              {/* Sources (collapsed) */}
+              <SourcesSection
+                sources={output.sources}
+                contextProvided={!!(notes || selectedGoal || contextStakeholders.length)}
+              />
             </div>
-
-            {/* Structured sections */}
-            <PrepSection icon={<MessageSquare className="w-3 h-3" />} title="Key Talking Points" items={output.talkingPoints} />
-            <PrepSection icon={<HelpCircle className="w-3 h-3" />} title="Questions to Ask" items={output.questionsToAsk} />
-            <PrepSection icon={<AlertTriangle className="w-3 h-3" />} title="Risks / Objections" items={output.risksObjections} />
-            <PrepSection icon={<Award className="w-3 h-3" />} title="Proof / KPIs" items={output.proofKPIs} />
-
-            {/* Vendor Intel */}
-            <VendorIntelSection focusId={focusId} weekOf={weekOf} />
-
-            {/* Sources (collapsed) */}
-            <SourcesSection
-              sources={output.sources}
-              contextProvided={!!(notes || selectedGoal || contextStakeholders.length)}
-            />
           </div>
         )}
       </div>
@@ -546,14 +555,14 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
 
 function PrepSection({ icon, title, items }: { icon: React.ReactNode; title: string; items: string[] }) {
   return (
-    <div className="space-y-1">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
         {icon}
         {title}
       </p>
-      <ul className="space-y-0.5">
+      <ul className="space-y-1">
         {items.map((item, i) => (
-          <li key={i} className="text-xs leading-relaxed pl-3 border-l-2 border-primary/30 text-foreground">
+          <li key={i} className="text-xs leading-relaxed pl-3 border-l border-border/60 text-foreground">
             {item}
           </li>
         ))}
@@ -565,24 +574,24 @@ function PrepSection({ icon, title, items }: { icon: React.ReactNode; title: str
 function SourcesSection({ sources, contextProvided }: { sources: string[]; contextProvided: boolean }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <button
         onClick={() => setOpen(!open)}
-        className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5 hover:text-foreground transition-colors"
+        className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 hover:text-foreground transition-colors"
       >
         <FileText className="w-3 h-3" />
         Sources
         {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </button>
       {open && (
-        <ul className="space-y-0.5">
+        <ul className="space-y-1">
           {sources.map((s, i) => (
-            <li key={i} className="text-[10px] leading-relaxed pl-3 border-l-2 border-border/40 text-muted-foreground">
+            <li key={i} className="text-[10px] leading-relaxed pl-3 border-l border-border/50 text-muted-foreground">
               {s}
             </li>
           ))}
           {contextProvided && (
-            <li className="text-[10px] leading-relaxed pl-3 border-l-2 border-border/40 text-muted-foreground italic">
+            <li className="text-[10px] leading-relaxed pl-3 border-l border-border/50 text-muted-foreground italic">
               Context provided by user
             </li>
           )}
@@ -607,22 +616,22 @@ function VendorIntelSection({ focusId, weekOf }: { focusId: string; weekOf: stri
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-        <Zap className="w-3 h-3 text-primary" />
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+        <Zap className="w-3 h-3" />
         Vendor Intel (Microsoft)
       </p>
-      <div className="space-y-1">
+      <div className="space-y-2">
         {VENDOR_INTEL_CATEGORIES.map(({ type, label }) => {
           const cat = byType(type);
           return (
             <div key={type}>
-              <p className="text-[10px] font-medium text-muted-foreground/80 pl-3">{label}</p>
+              <p className="text-[10px] font-medium text-muted-foreground/70 pl-3 mb-0.5">{label}</p>
               {cat.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground/50 pl-3 italic">Not available yet.</p>
+                <p className="text-[10px] text-muted-foreground/40 pl-3 italic">Not available yet.</p>
               ) : (
                 <ul className="space-y-0.5">
                   {cat.map((item) => (
-                    <li key={item.id} className="text-xs leading-relaxed pl-3 border-l-2 border-primary/20 text-foreground">
+                    <li key={item.id} className="text-xs leading-relaxed pl-3 border-l border-border/50 text-foreground">
                       <span className="font-medium">{item.title}</span>
                       {item.summary && (
                         <span className="text-muted-foreground"> — {item.summary}</span>

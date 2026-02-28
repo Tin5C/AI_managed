@@ -41,11 +41,7 @@ const ACCOUNTS = DEMO_FOCUS_ENTITIES.map((e) => ({
   label: e.name,
 }));
 
-const THIS_WEEK_OF = '2026-02-10';
-const LAST_WEEK_OF = '2026-02-03';
-type WeekToggle = 'this' | 'last';
-
-type Depth = '1' | '3' | '10';
+const WEEK_OF = '2026-02-10';
 
 const MEETING_TYPES = [
   'Discovery',
@@ -88,7 +84,6 @@ interface PrepOutput {
 function buildPrepOutput(
   pool: PooledSignal[],
   focusId: string,
-  depth: Depth,
   slotIndices: number[],
 ): PrepOutput {
   const initiatives = publicInitiativesStore.getByFocusId(focusId);
@@ -97,7 +92,7 @@ function buildPrepOutput(
   const stakeholders = listStakeholders(focusId);
 
   const topSignals = slotIndices.map((i) => pool[i]).filter(Boolean);
-  const depthMul = depth === '1' ? 1 : depth === '3' ? 2 : 3;
+  const depthMul = 3;
 
   // Talking Points — from signals + initiatives
   const talkingPoints: string[] = [];
@@ -120,7 +115,7 @@ function buildPrepOutput(
     );
   }
   if (trendsPack?.summary?.data_gaps) {
-    for (const gap of trendsPack.summary.data_gaps.slice(0, depth === '10' ? 2 : 1)) {
+    for (const gap of trendsPack.summary.data_gaps.slice(0, 2)) {
       if (!gap.startsWith('DATA NEEDED:')) questionsToAsk.push(`Probe: ${gap}`);
     }
   }
@@ -171,8 +166,6 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [selectedWeek, setSelectedWeek] = useState<WeekToggle>('this');
-  const [depth, setDepth] = useState<Depth>('3');
   const [meetingType, setMeetingType] = useState<string>(MEETING_TYPES[0]);
   const [meetingTypeOpen, setMeetingTypeOpen] = useState(false);
 
@@ -189,7 +182,7 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
   const [slotIndices, setSlotIndices] = useState<number[]>([0, 1, 2]);
 
   const focusId = selectedAccount ?? ACCOUNTS[0].id;
-  const weekOf = selectedWeek === 'this' ? THIS_WEEK_OF : LAST_WEEK_OF;
+  const weekOf = WEEK_OF;
   const pool = useMemo(() => buildSignalPool(focusId, weekOf), [focusId, weekOf]);
 
   const canGenerate = selectedAccount !== null;
@@ -228,8 +221,8 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
 
   const output = useMemo(() => {
     if (!generated) return null;
-    return buildPrepOutput(pool, focusId, depth, slotIndices);
-  }, [generated, pool, focusId, depth, slotIndices]);
+    return buildPrepOutput(pool, focusId, slotIndices);
+  }, [generated, pool, focusId, slotIndices]);
 
   const addStakeholder = () => {
     const v = newStakeholder.trim();
@@ -248,7 +241,7 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
           Meeting Prep
         </h2>
         <p className="text-xs text-muted-foreground">
-          Walk into the meeting sharp — in 1, 3, or 10 minutes.
+          Walk into the meeting sharp.
         </p>
       </div>
 
@@ -360,44 +353,8 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
             </div>
           </div>
 
-          {/* Row 2: Week toggle + Depth pills + Generate */}
+          {/* Row 2: Generate */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Week toggle */}
-            <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
-              {(['this', 'last'] as WeekToggle[]).map((w) => (
-                <button
-                  key={w}
-                  onClick={() => { setSelectedWeek(w); setGenerated(false); }}
-                  className={cn(
-                    'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors',
-                    selectedWeek === w
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {w === 'this' ? 'This week' : 'Last week'}
-                </button>
-              ))}
-            </div>
-
-            {/* Depth pills */}
-            <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
-              {(['1', '3', '10'] as Depth[]).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDepth(d)}
-                  className={cn(
-                    'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors',
-                    depth === d
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {d} min
-                </button>
-              ))}
-            </div>
-
             {/* Generate button — compact */}
             <button
               onClick={handleGenerate}
@@ -520,7 +477,7 @@ export function MeetingPrepSection({ onOpenDealBrief }: MeetingPrepSectionProps)
                   Meeting Prep — {customerName}
                 </h3>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {meetingType} · {depth} min · Week of {weekOf}
+                  {meetingType} · Week of {weekOf}
                 </p>
               </div>
               <button

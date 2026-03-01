@@ -4,7 +4,7 @@
 
 // ============= Types =============
 
-export type VendorId = 'microsoft' | 'anthropic';
+export type VendorId = 'microsoft' | 'anthropic' | 'credo_ai';
 
 export type VendorIntelItemType =
   | 'update'
@@ -103,9 +103,12 @@ export function listVendorIntelByFocus(
   vendorId?: string,
 ): VendorIntelItem[] {
   return store.filter((i) => {
+    // ✅ enforce vendor first (prevents cross-vendor leakage)
+    if (vendorId && i.vendorId !== vendorId) return false;
+
+    // focus filtering (global items match any focus, but only after vendor filter)
     if (i.focusId && i.focusId !== focusId) return false;
     if (!i.focusId) return true; // global vendor items match any focus
-    if (vendorId && i.vendorId !== vendorId) return false;
     return true;
   });
 }
@@ -116,9 +119,15 @@ export function listVendorIntelByFocusAndWeek(
   vendorId?: string,
 ): VendorIntelItem[] {
   return store.filter((i) => {
-    if (i.focusId && i.focusId !== focusId) return false;
+    // ✅ enforce vendor first (prevents cross-vendor leakage)
     if (vendorId && i.vendorId !== vendorId) return false;
+
+    // focus filtering (global items allowed because we only reject mismatched focusId)
+    if (i.focusId && i.focusId !== focusId) return false;
+
+    // week filtering (preserve existing semantics)
     if (i.weekOf && i.weekOf !== weekOf) return false;
+
     return true;
   });
 }
@@ -275,6 +284,82 @@ const SEEDS: VendorIntelItem[] = [
     sourceType: 'internal_field_interview_sanitized',
     focusId: 'fifa',
   },
+  {
+    id: 'credo_ai_update_global_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'update',
+    title: 'Credo AI governance workshop packet updated for enterprise onboarding',
+    summary: 'Updated enablement packet maps governance ownership and approval checkpoints for cross-functional kickoff conversations.',
+    playId: 'play_governance',
+    tags: { persona: ['CIO', 'CISO'], stage: ['Discovery', 'Pilot'] },
+    proprietaryFlag: true,
+    sourceType: 'partner_program_brief',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'credo_ai_kpi_global_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'kpi',
+    title: 'Governance rollout benchmark: policy-to-control mapping completed in initial sprint',
+    summary: 'Enablement benchmark tracks completion of documented policy-to-control mapping during first implementation sprint.',
+    playId: 'play_governance',
+    tags: { persona: ['CIO', 'CISO'], stage: ['Pilot'] },
+    proprietaryFlag: true,
+    sourceType: 'partner_program_brief',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'credo_ai_reference_case_schindler_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'reference_case',
+    title: 'Industrial operations team used phased governance checkpoints before broader AI rollout',
+    summary: 'Reference enablement pattern: start with one business workflow, define accountable reviewers, then expand after checkpoint sign-off.',
+    playId: 'play_governance',
+    tags: { persona: ['CIO', 'COO'], stage: ['Pilot', 'Production'], industry: ['manufacturing'] },
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+    focusId: 'schindler',
+  },
+  {
+    id: 'credo_ai_pitch_drill_schindler_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'pitch_drill',
+    title: 'Governance pitch drill for operations and security alignment',
+    summary: 'Lead with three prompts: ownership model, approval path, and escalation path for high-impact model changes.',
+    playId: 'play_governance',
+    tags: { persona: ['CISO', 'COO'], stage: ['Discovery'] },
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+    focusId: 'schindler',
+  },
+  {
+    id: 'credo_ai_reference_case_fifa_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'reference_case',
+    title: 'Sports event program applied governance controls before fan-facing AI launch',
+    summary: 'Reference enablement pattern: align legal, security, and product owners on control gates before peak-event deployment.',
+    playId: 'play_governance',
+    tags: { persona: ['CIO', 'CISO'], stage: ['Pilot', 'Production'], industry: ['sports_entertainment'] },
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+    focusId: 'fifa',
+  },
+  {
+    id: 'credo_ai_pitch_drill_fifa_2026_02_10_1',
+    vendorId: 'credo_ai',
+    type: 'pitch_drill',
+    title: 'Event governance pitch drill for executive prep',
+    summary: 'Use a quick drill around accountability, control evidence, and incident response readiness before go-live decisions.',
+    playId: 'play_governance',
+    tags: { persona: ['CIO', 'CFO'], stage: ['Discovery'] },
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+    focusId: 'fifa',
+  },
 
   // ────────────────────────────────────────────
   // DEAL CLOSE KITS (SI-grade, longer content)
@@ -284,7 +369,27 @@ const SEEDS: VendorIntelItem[] = [
     vendorId: 'microsoft',
     type: 'deal_close_kit',
     title: 'Deal Close Kit: AI Governance Play',
-    summary: `Buying committee reality: Deals stall when CISO and CIO disagree on AI model ownership. In 6 of 8 closed deals, the breakthrough was getting the CISO to co-own the governance framework (not just review it). Key meetings: The "Governance Charter" workshop (60 min, CIO + CISO + Head of Data) was the single most effective meeting format. Present a draft charter with 3 tiers (sandbox/controlled/production) and let them redline it — this creates ownership. Persona-specific value framing: For the CFO — "Governance prevents rework: ungoverned AI pilots have a 3x higher failure-to-production rate, wasting 60–80% of pilot investment." For the CISO — "A governance framework is your audit shield: regulators ask for evidence of controls, not perfection." For the CIO — "Governance is the accelerator, not the brake: governed pipelines ship 40% faster because they don't get blocked at security review." Value outcomes: 40–60% reduction in time-to-production for AI workloads. 70% fewer security-review escalations. 3x improvement in audit readiness scores. What did NOT work: Positioning governance as a "compliance checkbox" — buyers disengage. Leading with tooling before process — "We tried selling Purview first and it backfired; process-first, tooling-second."`,
+    summary: `Situation:
+- Buying committee conflict between CISO and CIO on AI ownership
+- Governance breakthrough when CISO co-owns framework
+
+Key Meeting:
+- "Governance Charter" workshop (60 min, CIO + CISO + Head of Data)
+- Present draft 3-tier model (sandbox/controlled/production)
+
+Persona Framing:
+- CFO: Prevents rework; avoids 60–80% pilot waste
+- CISO: Audit shield; evidence of controls
+- CIO: Accelerator; 40% faster governed pipelines
+
+Outcomes:
+- 40–60% reduction in time-to-production
+- 70% fewer security escalations
+- 3x improvement in audit readiness
+
+What Not To Do:
+- Avoid positioning as compliance checkbox
+- Do not lead with tooling before process`,
     playId: 'play_governance',
     tags: { persona: ['CFO', 'CIO', 'CISO'], stage: ['Procurement'] },
     proprietaryFlag: true,
@@ -295,7 +400,30 @@ const SEEDS: VendorIntelItem[] = [
     vendorId: 'microsoft',
     type: 'deal_close_kit',
     title: 'Deal Close Kit: FinOps for AI Play',
-    summary: `Buying committee reality: CFO wants predictability; CIO wants flexibility. The unlock is showing that FinOps governance gives both — budget guardrails with automated elasticity. In closed deals, the CFO champion emerged when we showed a "cost per business outcome" model (not cost per resource). Key meetings: The "AI Cost Model" workshop (90 min, CFO + CIO + Finance Controller) where you build a live cost model together. Use their actual Azure consumption data (even partial) to make it real. Persona-specific value framing: For the CFO — "FinOps for AI turns unpredictable AI spend into a managed cost line with 25–35% savings potential and zero performance sacrifice." For the CIO — "Token budgets and anomaly alerts mean your team stops firefighting surprise bills and focuses on scaling what works." For the COO — "Cost-per-transaction visibility lets you tie AI investment directly to operational KPIs like resolution time or throughput." Value outcomes: 25–35% reduction in AI-specific cloud spend within 6 months. 90% reduction in unexpected cost spikes (anomaly detection). CFO sign-off cycle reduced from 8 weeks to 3 weeks when cost model is co-created. What did NOT work: Selling FinOps as "cost cutting" — buyers with growth mandates disengage. Starting with Azure Advisor recommendations without business context — "generic savings tips feel irrelevant to AI-specific spend patterns."`,
+    summary: `Situation:
+- CFO wants predictability
+- CIO wants flexibility
+
+Unlock:
+- Show FinOps governance gives both via budget guardrails + elasticity
+
+Key Meeting:
+- "AI Cost Model" workshop (CFO + CIO + Controller)
+- Build cost-per-business-outcome model using real Azure data
+
+Persona Framing:
+- CFO: 25–35% savings potential, predictable AI spend
+- CIO: Stops surprise bills; focuses on scaling
+- COO: Tie AI spend to operational KPIs
+
+Outcomes:
+- 25–35% AI cloud cost reduction in 6 months
+- 90% reduction in cost spikes
+- CFO sign-off cycle reduced from 8 to 3 weeks
+
+What Not To Do:
+- Avoid generic cost-cutting pitch
+- Avoid Azure Advisor tips without business context`,
     playId: 'play_finops_ai',
     tags: { persona: ['CFO', 'CIO', 'COO'], stage: ['Procurement'] },
     proprietaryFlag: true,
@@ -439,6 +567,189 @@ const SEEDS: VendorIntelItem[] = [
     tags: { persona: ['CIO', 'CISO'], stage: ['Pilot', 'Production'] },
     proprietaryFlag: true,
     sourceType: 'roadmap_brief',
+  },
+  {
+    id: 'ms-ai-gov-retail-standardization-01',
+    vendorId: 'microsoft',
+    type: 'deal_close_kit',
+    title: 'EU Retail Group – AI Governance Standardization',
+    summary: `Situation:
+• 14 AI pilots across 6 business units
+• Legal raised EU AI Act compliance risk
+• CISO blocked further rollout
+
+Unlock:
+• Governance-first executive session (CIO + CISO)
+• Reframed AI as control problem, not productivity initiative
+
+Microsoft Leverage Used:
+• Azure Architecture Review
+• Purview data lineage demo
+• Regional Microsoft executive sponsor intro
+
+Outcome:
+• €2.4M Azure ARR
+• 5.1 months to close (forecast was 11 months)
+• Enterprise governance charter approved
+
+Replication Rule:
+Secure joint CIO/CISO alignment before proposing additional AI expansion.`,
+    playId: 'ai-governance',
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-ai-gov-manufacturing-recovery-01',
+    vendorId: 'microsoft',
+    type: 'deal_close_kit',
+    title: 'Industrial Manufacturer – AI Risk Recovery',
+    summary: `Situation:
+• AI assistant deployed without IT oversight
+• Data leakage scare triggered board review
+• AI program nearly paused
+
+Unlock:
+• Security-led reframing: incident = governance gap
+• Introduced centralized model registry + audit logging
+
+Microsoft Leverage Used:
+• Defender for Cloud AI policies
+• Purview compliance controls
+• Microsoft compliance SME joined executive call
+
+Outcome:
+• €1.3M ARR
+• Expanded rollout to 3 production plants
+• CISO became co-sponsor
+
+Replication Rule:
+When AI fear surfaces, pivot to control architecture, not AI capability.`,
+    playId: 'ai-governance',
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-finops-ai-banking-stabilization-01',
+    vendorId: 'microsoft',
+    type: 'deal_close_kit',
+    title: 'Tier-2 Bank – AI Cost Stabilization',
+    summary: `Situation:
+• Token spend volatility >28% month-to-month
+• CFO requested cost freeze
+• AI roadmap stalled
+
+Unlock:
+• FinOps workshop exposed inefficient model allocation
+• Introduced reserved capacity alignment
+
+Microsoft Leverage Used:
+• Azure cost benchmarking dataset
+• FinOps architecture template
+• AI consumption rebate alignment
+
+Outcome:
+• €1.1M ARR
+• 14% margin improvement
+• CFO approved continued AI expansion
+
+Replication Rule:
+Engage CFO early with volatility modeling, not post-hoc optimization.`,
+    playId: 'finops-for-ai',
+    proprietaryFlag: true,
+    sourceType: 'internal_field_interview_sanitized',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-ai-gov-enterprise-benchmark-01',
+    vendorId: 'microsoft',
+    type: 'kpi',
+    title: 'Enterprise AI Governance Benchmark',
+    summary: `Compliance Impact:
+• 42% reduction in audit findings within 12 months
+• 31% faster AI approval cycle
+
+Financial Impact:
+• 18% reduction in duplicate model spend
+• 22% faster pilot-to-enterprise expansion
+
+When to Use:
+Quantify governance ROI in CIO/CISO alignment discussions.`,
+    playId: 'ai-governance',
+    proprietaryFlag: false,
+    sourceType: 'public',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-ai-gov-control-plane-pattern-01',
+    vendorId: 'microsoft',
+    type: 'approved_architecture_pattern',
+    title: 'AI Governance Control Plane Pattern',
+    summary: `Core Stack:
+• Azure OpenAI (isolated per BU)
+• Purview (data lineage + classification)
+• Defender for Cloud (policy enforcement)
+• Hub-Spoke network isolation
+
+Guardrails:
+• Central policy approval before production
+• Mandatory model audit logging (12 months)
+• Token budgets enforced per BU
+
+When to Use:
+Multi-region or regulated AI deployment.
+
+Avoid:
+Decentralized OpenAI instances without audit registry.`,
+    playId: 'ai-governance',
+    proprietaryFlag: false,
+    sourceType: 'public',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-ai-consumption-rebate-01',
+    vendorId: 'microsoft',
+    type: 'incentive',
+    title: 'Azure AI Consumption Rebate',
+    summary: `Trigger:
+• >$10K monthly Azure AI consumption
+
+Benefit:
+• Up to 8% rebate
+• Eligible for co-sell acceleration
+
+Action:
+Register opportunity via Partner Center before billing cycle.`,
+    playId: 'finops-for-ai',
+    proprietaryFlag: false,
+    sourceType: 'public',
+    weekOf: '2026-02-10',
+  },
+  {
+    id: 'ms-ai-architecture-review-request-01',
+    vendorId: 'microsoft',
+    type: 'request_router',
+    title: 'Request Azure AI Architecture Review',
+    summary: `Use When:
+• Deal >€250K ARR
+• Multi-region rollout
+• Regulated industry
+
+Required:
+• Architecture diagram
+• Consumption estimate
+• Compliance scope
+
+SLA:
+5–7 business days
+
+Unlock:
+Faster security approval and executive credibility.`,
+    playId: 'ai-governance',
+    proprietaryFlag: false,
+    sourceType: 'public',
+    weekOf: '2026-02-10',
   },
 ];
 

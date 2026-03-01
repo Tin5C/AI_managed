@@ -2,11 +2,12 @@
 // Renders all three tabs as a unified execution section on the Partner homepage
 
 import { useState, useEffect } from 'react';
-import { Briefcase, Brain, Info, Building2 } from 'lucide-react';
+import { Briefcase, Brain, Info, Building2, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MeetingPrepSection } from './MeetingPrepSection';
 import { DealPlanDriversView } from './DealPlanDriversView';
 import { AccountIntelligenceView } from './AccountIntelligenceView';
+import { VendorIntelligenceView } from './VendorIntelligenceView';
 import {
   Tooltip,
   TooltipContent,
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { DEAL_PLAN_TRIGGER_EVENT } from '@/data/partner/dealPlanTrigger';
 
-export type PartnerMode = 'meeting-prep' | 'deal-planning' | 'account-intelligence';
+export type PartnerMode = 'meeting-prep' | 'deal-planning' | 'account-intelligence' | 'vendor-intelligence';
 
 const DEFAULT_FOCUS_ID = 'schindler';
 
@@ -77,6 +78,18 @@ export function PartnerModeSection() {
             <Building2 className="w-4 h-4" />
             Account Intelligence
           </button>
+          <button
+            onClick={() => setMode('vendor-intelligence')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              mode === 'vendor-intelligence'
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FileText className="w-4 h-4" />
+            Vendor Leverage
+          </button>
         </div>
 
         <TooltipProvider>
@@ -105,8 +118,10 @@ export function PartnerModeSection() {
           <p className="text-[11px] text-muted-foreground tracking-wide">Active Deal Workspace</p>
           <DealPlanDriversView onGoToQuickBrief={() => setMode('meeting-prep')} onGoToAccountIntelligence={() => setMode('account-intelligence')} />
         </div>
-      ) : (
+      ) : mode === 'account-intelligence' ? (
         <AccountIntelligenceView focusId={aiFocusId} onFocusIdChange={setAiFocusId} />
+      ) : (
+        <VendorIntelligenceView defaultFocusId={aiFocusId} defaultWeekOf="2026-02-10" />
       )}
     </section>
   );

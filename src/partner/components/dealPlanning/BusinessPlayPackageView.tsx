@@ -330,7 +330,7 @@ function StakeholdersTabs({ talkTracks, discoveryAgenda, driverLabels = [], acti
   );
 }
 
-/* ── Objection LAER Accordion ── */
+/* ── Objection Accordion ── */
 
 
 
@@ -378,30 +378,30 @@ function ObjectionLAERAccordion({ objections }: { objections: import('@/data/par
 
             {expanded && (
               <div className="px-3 pb-2.5 space-y-2 border-t border-border/30 pt-2">
-                {/* LISTEN */}
+                {/* What they're really saying */}
                 <div className="space-y-0.5">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
-                    <Ear className="w-3 h-3" /> Listen
+                    <Ear className="w-3 h-3" /> What they're saying
                   </p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{obj.laer.listen}</p>
                 </div>
 
                 <div className="border-t border-border/20" />
 
-                {/* ACKNOWLEDGE */}
+                {/* Why it matters to them */}
                 <div className="space-y-0.5">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
-                    <Heart className="w-3 h-3" /> Acknowledge
+                    <Heart className="w-3 h-3" /> Why it matters
                   </p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{obj.laer.acknowledge}</p>
                 </div>
 
                 <div className="border-t border-border/20" />
 
-                {/* EXPLORE */}
+                {/* Discovery questions */}
                 <div className="space-y-0.5">
                   <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
-                    <Search className="w-3 h-3" /> Explore
+                    <Search className="w-3 h-3" /> Discovery questions
                   </p>
                   {obj.laer.explore.length > 0 ? (
                     <ul className="space-y-0.5">
@@ -419,11 +419,11 @@ function ObjectionLAERAccordion({ objections }: { objections: import('@/data/par
 
                 <div className="border-t border-border/20" />
 
-                {/* RESPOND */}
+                {/* How to respond */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="text-[9px] font-bold uppercase tracking-wider text-primary/60 flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" /> Respond
+                      <MessageSquare className="w-3 h-3" /> How to respond
                     </p>
                     <button
                       type="button"
@@ -772,8 +772,8 @@ export function BusinessPlayPackageView({ pkg, availableVariants, activeVariant,
         {/* 1. Stakeholders & messaging — Card Tabs UI */}
         <StakeholdersTabs talkTracks={b.positioning.talk_tracks} discoveryAgenda={b.delivery_assets.discovery_agenda} driverLabels={basedOnLabels} activePov={activePov} focusId={focusId} />
 
-        {/* 2. Objection handling (LAER) */}
-        <CollapsibleSection title="Objection handling (LAER)" subtitle="Structured conversation framework" defaultOpen>
+        {/* 2. Objection handling */}
+        <CollapsibleSection title="Objection handling" subtitle="Structured conversation framework" defaultOpen>
           {objectionResult.objections.length > 0 ? (
             <div className="space-y-1">
               {objectionResult.objections.map((obj, idx) => (

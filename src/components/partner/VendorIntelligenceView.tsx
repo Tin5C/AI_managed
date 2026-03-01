@@ -1,12 +1,87 @@
 import { useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight, ExternalLink, Copy } from 'lucide-react';
 import type { VendorId } from '@/data/partner/vendorIntelStore';
 import { resolveVendorLeverage } from "@/services/partner/vendorLeverage/resolver";
+import type { VendorLeverageCardVM } from "@/services/partner/vendorLeverage/resolver";
+import { toast } from 'sonner';
 
 type VendorFilter = 'microsoft' | 'credo_ai';
 
 interface VendorIntelligenceViewProps {
   defaultFocusId?: string;
   defaultWeekOf?: string;
+}
+
+function TypeBadge({ type }: { type: string }) {
+  const label = type.replace(/_/g, ' ');
+  return (
+    <span className="inline-block rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide bg-muted text-muted-foreground whitespace-nowrap">
+      {label}
+    </span>
+  );
+}
+
+function LeverageCard({ item }: { item: VendorLeverageCardVM }) {
+  const [open, setOpen] = useState(false);
+
+  const handleCopy = () => {
+    const text = [item.title, ...item.bullets, item.detail].filter(Boolean).join('\n');
+    navigator.clipboard.writeText(text);
+    toast.success('Key points copied');
+  };
+
+  return (
+    <div className="rounded-md border border-border bg-background p-3 space-y-1.5">
+      <div className="flex items-start gap-2">
+        <p className="text-sm font-medium leading-snug flex-1">{item.title}</p>
+        <TypeBadge type={item.type} />
+      </div>
+
+      {item.bullets.length > 0 && (
+        <ul className="list-disc pl-4 text-xs text-muted-foreground space-y-0.5 line-clamp-3">
+          {item.bullets.slice(0, 3).map((b, i) => (
+            <li key={`${item.id}-b-${i}`}>{b}</li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex items-center gap-3 pt-1">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          {open ? 'Hide details' : 'Show details'}
+        </button>
+
+        {item.sourceUrl ? (
+          <a
+            href={item.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline ml-auto"
+          >
+            <ExternalLink className="h-3 w-3" /> Open source
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline ml-auto"
+          >
+            <Copy className="h-3 w-3" /> Copy key points
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <p className="text-xs text-muted-foreground whitespace-pre-line pt-1 border-t border-border/50">
+          {item.detail}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function VendorIntelligenceView({
@@ -16,13 +91,8 @@ export function VendorIntelligenceView({
   void defaultFocusId;
   void defaultWeekOf;
   const [vendorId, setVendorId] = useState<VendorFilter>('microsoft');
-  const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
 
-  const vm = useMemo(() => {
-    return resolveVendorLeverage(vendorId as VendorId);
-  }, [vendorId]);
-
-  const hasItems = vm.sections.some((section) => section.items.length > 0);
+  const vm = useMemo(() => resolveVendorLeverage(vendorId as VendorId), [vendorId]);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
@@ -38,52 +108,27 @@ export function VendorIntelligenceView({
             <option value="credo_ai">Credo AI</option>
           </select>
         </label>
-
       </div>
 
-      {!hasItems ? (
-        <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
-          Not available yet.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {vm.sections.map((section, index) => (
-            <div key={section.id} className="space-y-2">
-              <h3 className={index === 0 ? 'text-base font-bold tracking-wide text-foreground' : 'text-sm font-semibold text-foreground'}>{section.title}</h3>
-              {section.items.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Not available yet.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {section.items.map((item) => (
-                    <li key={item.id} className="rounded-md border border-border p-3">
-                      <p className="text-sm font-medium">{item.title}</p>
-                      {item.bullets.length > 0 && (
-                        <ul className="mt-1 list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                          {item.bullets.map((bullet, i) => (
-                            <li key={`${item.id}-bullet-${i}`}>{bullet}</li>
-                          ))}
-                        </ul>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExpandedDetails((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
-                        }
-                        className="mt-2 text-xs font-medium text-primary hover:underline"
-                      >
-                        {expandedDetails[item.id] ? 'Hide details' : 'Show details'}
-                      </button>
-                      {expandedDetails[item.id] && (
-                        <p className="mt-2 text-sm text-muted-foreground whitespace-pre-line">{item.detail}</p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {vm.sections.map((section) => (
+          <div key={section.id} className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {section.title}{' '}
+              <span className="text-muted-foreground font-normal">({section.items.length})</span>
+            </h3>
+            {section.items.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Not available yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {section.items.map((item) => (
+                  <LeverageCard key={item.id} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
